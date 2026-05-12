@@ -1,13 +1,20 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Github, Linkedin, Download } from "lucide-react";
+import { Github, Linkedin, Instagram, Globe, Code2, Download } from "lucide-react";
 import { publicNavLinks } from "../constants/site";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import AppShell from "../components/AppShell";
 import useAsyncData from "../hooks/useAsyncData";
 import { publicApi } from "../api/publicApi";
+
+const socialIconMap = {
+  github: Github,
+  linkedin: Linkedin,
+  instagram: Instagram,
+  leetcode: Code2,
+};
 
 const PublicLayout = () => {
   const location = useLocation();
@@ -22,7 +29,12 @@ const PublicLayout = () => {
   const displayName = profile.data?.fullName || profile.data?.name || "Priyanshu Midha";
   const githubUrl = profile.data?.githubUrl || "";
   const linkedinUrl = profile.data?.linkedinUrl || "";
+  const instagramUrl = profile.data?.instagramUrl || "";
   const resumeUrl = profile.data?.resumeUrl || "";
+  const customSocialLinks = (profile.data?.socialLinks || []).filter((link) => {
+    const platform = String(link?.platform || "").toLowerCase();
+    return link?.url && !["github", "linkedin", "instagram"].includes(platform);
+  });
 
   return (
     <AppShell
@@ -70,6 +82,29 @@ const PublicLayout = () => {
                   <Linkedin size={16} />
                 </a>
               ) : null}
+              {instagramUrl ? (
+                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="rounded-xl border border-border bg-card p-2 text-text-secondary hover:text-text-primary">
+                  <Instagram size={16} />
+                </a>
+              ) : null}
+              {customSocialLinks.map((link, index) => {
+                const platform = String(link?.platform || "").toLowerCase();
+                const Icon = socialIconMap[platform] || Globe;
+
+                return (
+                  <a
+                    key={`${link.platform}-${index}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={link.platform || "Social link"}
+                    aria-label={link.platform || "Social link"}
+                    className="rounded-xl border border-border bg-card p-2 text-text-secondary hover:text-text-primary"
+                  >
+                    <Icon size={16} />
+                  </a>
+                );
+              })}
               <a
                 href={resumeUrl || "/resume"}
                 target={resumeUrl ? "_blank" : undefined}

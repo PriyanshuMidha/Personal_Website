@@ -50,7 +50,7 @@ cp client/.env.example client/.env
 
 ### 3. Required backend env vars
 
-From [server/.env.example](/Users/priyanshumidha/Documents/Personal website /server/.env.example:1):
+From [`server/.env.example`](server/.env.example):
 
 - `PORT`
 - `NODE_ENV`
@@ -74,7 +74,7 @@ Optional backend env vars:
 
 ### 4. Required frontend env vars
 
-From [client/.env.example](/Users/priyanshumidha/Documents/Personal website /client/.env.example:1):
+From [`client/.env.example`](client/.env.example):
 
 - `VITE_API_BASE_URL`
 
@@ -156,7 +156,7 @@ Normalization and validation currently cover:
   - `liveUrl`
   - `resumeUrl`
 
-For a step-by-step verification checklist, see [CMS_SAVE_DEBUG_CHECKLIST.md](/Users/priyanshumidha/Documents/Personal website /CMS_SAVE_DEBUG_CHECKLIST.md:1).
+For a step-by-step verification checklist, see [`CMS_SAVE_DEBUG_CHECKLIST.md`](CMS_SAVE_DEBUG_CHECKLIST.md).
 
 ## Public Reflection Rules
 
@@ -256,7 +256,7 @@ curl -s http://localhost:5000/api/public/contact \
 
 ## Render Deployment
 
-The repo includes a Render blueprint in [render.yaml](/Users/priyanshumidha/Documents/Personal website /render.yaml:1).
+The repo includes a Render blueprint in [`render.yaml`](render.yaml).
 
 ### Backend service
 
@@ -362,5 +362,5 @@ Recommended next-phase additions:
 
 ## Useful Project Docs
 
-- [CMS_SAVE_DEBUG_CHECKLIST.md](/Users/priyanshumidha/Documents/Personal website /CMS_SAVE_DEBUG_CHECKLIST.md:1)
-- [PROJECT_CHANGES.md](/Users/priyanshumidha/Documents/Personal website /PROJECT_CHANGES.md:1)
+- [`CMS_SAVE_DEBUG_CHECKLIST.md`](CMS_SAVE_DEBUG_CHECKLIST.md)
+- [`PROJECT_CHANGES.md`](PROJECT_CHANGES.md)
