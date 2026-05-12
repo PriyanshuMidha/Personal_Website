@@ -33,6 +33,7 @@ const HomePage = () => {
   if (profile.error) return <ErrorState message={profile.error} />;
   if (dashboardStats.error) return <ErrorState message={dashboardStats.error} />;
 
+  const displayName = profile.data?.fullName || profile.data?.name || "Priyanshu Midha";
   const statsPayload = dashboardStats.data || {};
   const firstLiveProject = (featuredProjects.data || projects.data || []).find((project) => project.liveUrl);
   const quickActions = [
@@ -73,16 +74,15 @@ const HomePage = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Overview"
-        subtitle="Backend Engineer Command Center"
-        description="A premium command-center view of backend engineering work, project execution, delivery impact, and the systems thinking behind the portfolio."
+        subtitle="Personal Portfolio"
+        description={`A personal portfolio showcasing ${displayName}'s backend engineering work, selected projects, delivery impact, and professional story.`}
         actions={
-          <div className="flex flex-wrap gap-3">
-            <Link to="/projects" className="rounded-full bg-accent-primary px-5 py-2.5 text-sm font-semibold text-background">
+          <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:justify-end md:w-auto">
+            <Link to="/projects" className="inline-flex min-w-[190px] items-center justify-center rounded-full bg-accent-primary px-6 py-3 text-sm font-semibold text-background shadow-[0_16px_40px_rgba(139,92,246,0.18)] transition hover:translate-y-[-1px]">
               Explore projects
             </Link>
-            <Link to="/contact" className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-text-primary">
-              Contact
+            <Link to="/contact" className="inline-flex min-w-[190px] items-center justify-center rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold text-text-primary transition hover:border-border-soft hover:bg-panel">
+              Contact Me
             </Link>
           </div>
         }

@@ -1,9 +1,53 @@
 services:
   - type: web
     name: portfolio-cms-server
-    env: node
+    runtime: node
     rootDir: server
     buildCommand: npm install
     startCommand: npm run start
-    healthCheckPath: /health
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_URL
+        sync: false
+      - key: PUBLIC_SERVER_URL
+        sync: false
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CONTACT_NOTIFICATION_PROVIDER
+        value: resend
+      - key: CONTACT_NOTIFICATION_TO_EMAIL
+        sync: false
+      - key: CONTACT_NOTIFICATION_FROM_EMAIL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
 
+  - type: web
+    runtime: static
+    name: portfolio-cms-client
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

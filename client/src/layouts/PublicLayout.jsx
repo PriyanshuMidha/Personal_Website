@@ -19,6 +19,7 @@ const PublicLayout = () => {
     () => publicNavLinks.find((link) => (link.path === "/" ? location.pathname === "/" : location.pathname.startsWith(link.path))),
     [location.pathname]
   );
+  const displayName = profile.data?.fullName || profile.data?.name || "Priyanshu Midha";
   const githubUrl = profile.data?.githubUrl || "";
   const linkedinUrl = profile.data?.linkedinUrl || "";
   const resumeUrl = profile.data?.resumeUrl || "";
@@ -53,8 +54,9 @@ const PublicLayout = () => {
       }
       topbar={
         <Topbar
-          title={currentLink?.label || "Overview"}
-          subtitle={location.pathname === "/" ? "Backend Engineer Command Center" : "Public Workspace"}
+          title={location.pathname === "/" ? displayName : currentLink?.label || "Portfolio"}
+          subtitle={location.pathname === "/" ? "Personal Portfolio" : "Public Workspace"}
+          titleClassName={location.pathname === "/" ? "text-3xl md:text-4xl" : "text-2xl"}
           onOpenSidebar={() => setMobileOpen(true)}
           rightContent={
             <div className="hidden items-center gap-2 md:flex">

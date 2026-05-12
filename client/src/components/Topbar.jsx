@@ -1,7 +1,7 @@
 import { Menu, Bell, Activity, Share2 } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 
-const Topbar = ({ title, subtitle, onOpenSidebar, rightContent }) => (
+const Topbar = ({ title, subtitle, onOpenSidebar, rightContent, titleClassName = "text-2xl" }) => (
   <header className="sticky top-0 z-30 border-b border-border/80 bg-panel/95 backdrop-blur">
     <div className="flex min-h-[76px] items-center justify-between gap-4 px-4 md:px-6 lg:px-8">
       <div className="flex items-center gap-3">
@@ -10,7 +10,7 @@ const Topbar = ({ title, subtitle, onOpenSidebar, rightContent }) => (
         </button>
         <div>
           <p className="text-label">{subtitle}</p>
-          <h2 className="font-display text-2xl text-text-primary">{title}</h2>
+          <h2 className={`font-display text-text-primary ${titleClassName}`}>{title}</h2>
         </div>
       </div>
       <div className="flex items-center gap-3">

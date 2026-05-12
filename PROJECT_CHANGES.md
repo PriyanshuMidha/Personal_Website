@@ -13,6 +13,7 @@
 - Public APIs live under `/api/public`.
 - Admin APIs live under `/api/admin`.
 - Admin authentication uses JWT bearer tokens.
+- Health endpoints are available at both `GET /api/health` and `GET /health`, with the Render backend health check targeting `/api/health`.
 - Implemented public routes:
   - `GET /api/public/profile`
   - `GET /api/public/projects`
@@ -66,6 +67,7 @@
 - Published public content is filtered with `isPublished` and sorted with `displayOrder`.
 - `Project` uses unique slugs, exact CMS-enforced category/status enums, and supports Cloudinary-backed or local-fallback `screenshots`.
 - `ContactMessage` supports statuses `new`, `read`, `replied`, and `archived`.
+- Public contact submissions are always stored in `ContactMessage`, and the server now also attempts an email notification via a provider-backed server call when `CONTACT_NOTIFICATION_*` / `RESEND_API_KEY` environment variables are configured.
 - CRUD and profile/upload services now emit activity logs so dashboard widgets and heatmaps update from Mongo-backed behavior instead of hardcoded data.
 - Image and resume uploads prefer Cloudinary, but local development now falls back to server-hosted files under `/uploads/*` when Cloudinary credentials are missing so CMS upload flows still work on localhost.
 
@@ -99,5 +101,8 @@
 - A discoverable Codex copy of `portfolio-change-tracker` was also installed under `~/.codex/skills/portfolio-change-tracker`.
 - Client builds no longer read `VITE_API_URL`; set `VITE_API_BASE_URL` when overriding the API origin.
 - Production deployment and runtime verification still depend on installing project dependencies, setting environment variables, and connecting MongoDB/Cloudinary credentials.
+- The repo-level `render.yaml` now defines both the backend Node service (`rootDir: server`) and the frontend Render static site (`rootDir: client`) with SPA rewrite routing to `/index.html`.
+- Contact email notifications require server environment variables on Render or the host runtime: `CONTACT_NOTIFICATION_TO_EMAIL`, `CONTACT_NOTIFICATION_FROM_EMAIL`, and either `CONTACT_NOTIFICATION_PROVIDER=resend` plus `RESEND_API_KEY` or a future supported provider.
+- `README.md` is now the primary setup/deployment/operator guide and links to `CMS_SAVE_DEBUG_CHECKLIST.md` for save-to-public verification.
 - A repo-level `CMS_SAVE_DEBUG_CHECKLIST.md` now documents the localhost verification commands and manual acceptance flow for CMS save-to-public reflection.
 - Local server bootstrap now includes a `.env` file path expectation in `server/`, and accidental shell-created files were cleaned from that folder.
