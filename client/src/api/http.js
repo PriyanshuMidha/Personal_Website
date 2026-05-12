@@ -1,6 +1,11 @@
 const rawBase = import.meta.env.VITE_API_BASE_URL?.trim() || "http://localhost:5000/api";
 const BASE_URL = rawBase.replace(/\/$/, "");
 const isDev = import.meta.env.DEV;
+const hasBody = (body) => body !== undefined && body !== null;
+const isJsonLikeBody = (body) =>
+  hasBody(body) &&
+  !(body instanceof FormData) &&
+  (Array.isArray(body) || (typeof body === "object" && body.constructor === Object));
 
 const serializeBodyForDebug = (body) => {
   if (!body) return null;
@@ -21,18 +26,20 @@ const serializeBodyForDebug = (body) => {
 
 export const apiRequest = async (path, options = {}) => {
   const method = options.method || "GET";
-  const body = options.body;
+  const originalBody = options.body;
+  const body = isJsonLikeBody(originalBody) ? JSON.stringify(originalBody) : originalBody;
   const headers = {
     ...(options.headers || {}),
   };
 
-  if (!(body instanceof FormData)) {
+  if (hasBody(body) && !(originalBody instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
 
   const response = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers,
+    body,
   });
 
   const payload = await response.json().catch(() => ({}));

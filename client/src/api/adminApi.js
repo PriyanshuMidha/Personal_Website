@@ -9,7 +9,7 @@ const adminJsonRequest = (path, { method = "GET", payload, includeAuth = true } 
   apiRequest(path, {
     method,
     headers: includeAuth ? authHeaders() : undefined,
-    body: payload === undefined ? undefined : JSON.stringify(payload),
+    body: payload,
   });
 
 export const adminApi = {

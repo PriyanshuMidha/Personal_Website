@@ -14,6 +14,6 @@ export const publicApi = {
   submitContact: (payload) =>
     apiRequest("/public/contact", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: payload,
     }),
 };
