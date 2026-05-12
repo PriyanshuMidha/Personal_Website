@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portfolio Change Tracker"
+  short_description: "Keep portfolio change notes synced"
+  default_prompt: "Use $portfolio-change-tracker to update PROJECT_CHANGES.md after meaningful portfolio code changes."

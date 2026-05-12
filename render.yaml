@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: portfolio-cms-server
+    env: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm run start
+    healthCheckPath: /health
+
