@@ -6,6 +6,10 @@ import { createActivityLog } from "./activityService.js";
 
 const crud = createCrudService(Project, {
   searchFields: ["title", "category", "status", "shortDescription"],
+  buildAdminFilter: (query) => ({
+    ...(query.status ? { status: query.status } : {}),
+    ...(query.category ? { category: query.category } : {}),
+  }),
   onCreate: (item) =>
     createActivityLog({
       actionType: "create",
@@ -28,6 +32,20 @@ const crud = createCrudService(Project, {
       description: `Deleted project entry "${item.title}".`,
     }),
 });
+
+const publicProjectCardSelect = [
+  "title",
+  "slug",
+  "shortDescription",
+  "techStack",
+  "githubUrl",
+  "liveUrl",
+  "category",
+  "status",
+  "isFeatured",
+  "displayOrder",
+  "updatedAt",
+].join(" ");
 
 const ensureUniqueSlug = async (slug, currentId = null) => {
   const existingProject = await Project.findOne({ slug });
@@ -52,7 +70,7 @@ export const projectService = {
   },
 
   async getPublicBySlug(slug) {
-    const project = await Project.findOne({ slug, isPublished: true });
+    const project = await Project.findOne({ slug, isPublished: true }).lean();
     if (!project) {
       throw new ApiError(404, "Project not found");
     }
@@ -60,6 +78,14 @@ export const projectService = {
   },
 
   async getFeaturedProjects() {
-    return crud.listPublic({ isFeatured: true });
+    return Project.find({ isPublished: true, isFeatured: true }).sort({ displayOrder: 1, createdAt: -1 }).select(publicProjectCardSelect).lean();
+  },
+
+  async listPublicSummary() {
+    return Project.find({ isPublished: true }).sort({ displayOrder: 1, createdAt: -1 }).select(publicProjectCardSelect).lean();
+  },
+
+  async listFeaturedSummary(limit = 4) {
+    return Project.find({ isPublished: true, isFeatured: true }).sort({ displayOrder: 1, createdAt: -1 }).limit(limit).select(publicProjectCardSelect).lean();
   },
 };

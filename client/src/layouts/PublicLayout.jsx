@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Github, Linkedin, Download } from "lucide-react";
+import { Github, Linkedin, Instagram, Globe, Code2, Download } from "lucide-react";
 import { publicNavLinks } from "../constants/site";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
@@ -9,20 +9,41 @@ import AppShell from "../components/AppShell";
 import useAsyncData from "../hooks/useAsyncData";
 import { publicApi } from "../api/publicApi";
 
+const socialIconMap = {
+  github: Github,
+  linkedin: Linkedin,
+  instagram: Instagram,
+  leetcode: Code2,
+};
+
 const PublicLayout = () => {
   const location = useLocation();
+  const isHomeRoute = location.pathname === "/";
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const profile = useAsyncData(() => publicApi.getProfile(), []);
+  const publicData = useAsyncData(
+    () => (isHomeRoute ? publicApi.getHome() : publicApi.getProfile()),
+    [isHomeRoute],
+    {
+      cacheKey: isHomeRoute ? "public:home" : "public:profile",
+      staleTime: 5 * 60 * 1000,
+    }
+  );
 
   const currentLink = useMemo(
     () => publicNavLinks.find((link) => (link.path === "/" ? location.pathname === "/" : location.pathname.startsWith(link.path))),
     [location.pathname]
   );
-  const displayName = profile.data?.fullName || profile.data?.name || "Priyanshu Midha";
-  const githubUrl = profile.data?.githubUrl || "";
-  const linkedinUrl = profile.data?.linkedinUrl || "";
-  const resumeUrl = profile.data?.resumeUrl || "";
+  const profile = isHomeRoute ? publicData.data?.profile : publicData.data;
+  const displayName = profile?.fullName || profile?.name || "Priyanshu Midha";
+  const githubUrl = profile?.githubUrl || "";
+  const linkedinUrl = profile?.linkedinUrl || "";
+  const instagramUrl = profile?.instagramUrl || "";
+  const resumeUrl = profile?.resumeUrl || "";
+  const customSocialLinks = (profile?.socialLinks || []).filter((link) => {
+    const platform = String(link?.platform || "").toLowerCase();
+    return link?.url && !["github", "linkedin", "instagram"].includes(platform);
+  });
 
   return (
     <AppShell
@@ -54,9 +75,9 @@ const PublicLayout = () => {
       }
       topbar={
         <Topbar
-          title={location.pathname === "/" ? displayName : currentLink?.label || "Portfolio"}
-          subtitle={location.pathname === "/" ? "Personal Portfolio" : "Public Workspace"}
-          titleClassName={location.pathname === "/" ? "text-3xl md:text-4xl" : "text-2xl"}
+          title={isHomeRoute ? displayName : currentLink?.label || "Portfolio"}
+          subtitle={isHomeRoute ? "Personal Portfolio" : "Public Workspace"}
+          titleClassName={isHomeRoute ? "text-3xl md:text-4xl" : "text-2xl"}
           onOpenSidebar={() => setMobileOpen(true)}
           rightContent={
             <div className="hidden items-center gap-2 md:flex">
@@ -70,6 +91,29 @@ const PublicLayout = () => {
                   <Linkedin size={16} />
                 </a>
               ) : null}
+              {instagramUrl ? (
+                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="rounded-xl border border-border bg-card p-2 text-text-secondary hover:text-text-primary">
+                  <Instagram size={16} />
+                </a>
+              ) : null}
+              {customSocialLinks.map((link, index) => {
+                const platform = String(link?.platform || "").toLowerCase();
+                const Icon = socialIconMap[platform] || Globe;
+
+                return (
+                  <a
+                    key={`${link.platform}-${index}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={link.platform || "Social link"}
+                    aria-label={link.platform || "Social link"}
+                    className="rounded-xl border border-border bg-card p-2 text-text-secondary hover:text-text-primary"
+                  >
+                    <Icon size={16} />
+                  </a>
+                );
+              })}
               <a
                 href={resumeUrl || "/resume"}
                 target={resumeUrl ? "_blank" : undefined}
@@ -85,7 +129,7 @@ const PublicLayout = () => {
       }
     >
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <Outlet />
+        <Outlet context={{ homeData: isHomeRoute ? publicData.data : null, homeLoading: isHomeRoute ? publicData.loading : false, homeError: isHomeRoute ? publicData.error : "" }} />
       </motion.div>
     </AppShell>
   );

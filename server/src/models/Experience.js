@@ -18,7 +18,8 @@ const experienceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+experienceSchema.index({ isPublished: 1, displayOrder: 1 });
+
 const Experience = mongoose.model("Experience", experienceSchema);
 
 export default Experience;
-

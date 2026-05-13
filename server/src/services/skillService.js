@@ -4,6 +4,9 @@ import { createActivityLog } from "./activityService.js";
 
 export const skillService = createCrudService(Skill, {
   searchFields: ["name", "category", "level"],
+  buildAdminFilter: (query) => ({
+    ...(query.category ? { category: query.category } : {}),
+  }),
   onCreate: (item) =>
     createActivityLog({
       actionType: "create",
@@ -26,3 +29,10 @@ export const skillService = createCrudService(Skill, {
       description: `Deleted skill "${item.name}".`,
     }),
 });
+
+skillService.listPreview = async (limit = 4) =>
+  Skill.find({ isPublished: true })
+    .sort({ displayOrder: 1, createdAt: -1 })
+    .limit(limit)
+    .select("name category level icon displayOrder")
+    .lean();

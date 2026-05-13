@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import Loader from "../components/Loader";
 import ErrorState from "../components/ErrorState";
 import useAsyncData from "../hooks/useAsyncData";
 import { adminApi } from "../api/adminApi";
@@ -13,24 +12,29 @@ import ProgressRing from "../components/ProgressRing";
 import TopicProgressList from "../components/TopicProgressList";
 import StatusSplitCard from "../components/StatusSplitCard";
 import HeatmapGrid from "../components/HeatmapGrid";
+import AdminDashboardSkeleton from "../components/AdminDashboardSkeleton";
 
 const DashboardPage = () => {
-  const { data, loading, error } = useAsyncData(() => adminApi.getDashboard(), []);
-  const dashboardStats = useAsyncData(() => adminApi.getDashboardStats(), []);
-  const activityFeed = useAsyncData(() => adminApi.getActivity(5), []);
+  const { data, loading, error } = useAsyncData(() => adminApi.getDashboardOverview(), [], {
+    cacheKey: "admin:dashboard:overview",
+    staleTime: 60 * 1000,
+  });
 
-  if (loading || dashboardStats.loading || activityFeed.loading) return <Loader label="Loading control room..." />;
+  if (loading) return <AdminDashboardSkeleton />;
   if (error) return <ErrorState message={error} />;
-  if (dashboardStats.error) return <ErrorState message={dashboardStats.error} />;
-  if (activityFeed.error) return <ErrorState message={activityFeed.error} />;
 
-  const stats = data?.stats || {};
-  const widgets = dashboardStats.data || data?.widgets || {};
+  const stats = {
+    totalProjects: data?.totalProjects || 0,
+    featuredProjects: data?.featuredProjects || 0,
+    totalSkills: data?.totalSkills || 0,
+    unreadMessages: data?.unreadMessages || 0,
+  };
+  const widgets = data || {};
   const metricCards = [
-    { label: "Total Projects", value: stats.totalProjects || 0, helper: "All portfolio builds tracked", accent: "primary", progress: 68 },
-    { label: "Featured Projects", value: stats.featuredProjects || 0, helper: "Shown in public spotlight", accent: "cyan", progress: 42 },
-    { label: "Total Skills", value: stats.totalSkills || 0, helper: "Published backend and tool skills", accent: "green", progress: 74 },
-    { label: "Unread Messages", value: stats.unreadMessages || 0, helper: "Inbound messages awaiting triage", accent: "yellow", trend: "Needs review", progress: 53 },
+    { label: "Total Projects", value: stats.totalProjects, helper: "All portfolio builds tracked", accent: "primary", progress: 68 },
+    { label: "Featured Projects", value: stats.featuredProjects, helper: "Shown in public spotlight", accent: "cyan", progress: 42 },
+    { label: "Total Skills", value: stats.totalSkills, helper: "Published backend and tool skills", accent: "green", progress: 74 },
+    { label: "Unread Messages", value: stats.unreadMessages, helper: "Inbound messages awaiting triage", accent: "yellow", trend: "Needs review", progress: 53 },
   ];
 
   return (
@@ -50,8 +54,8 @@ const DashboardPage = () => {
       <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr_1fr]">
         <DashboardCard title="Portfolio Completion" eyebrow="Progress Ring" description="Tracks how complete the portfolio CMS is right now.">
           <ProgressRing
-            value={widgets.completion?.percentage || 0}
-            sublabel={`${widgets.completion?.completed || 0} of ${widgets.completion?.total || 0} core setup checkpoints complete`}
+            value={widgets.portfolioCompletion?.percentage || 0}
+            sublabel={`${widgets.portfolioCompletion?.completed || 0} of ${widgets.portfolioCompletion?.total || 0} core setup checkpoints complete`}
           />
         </DashboardCard>
         <DashboardCard title="Skill Topic Progress" eyebrow="Capability Depth" description="LeetCode-inspired topic coverage across your backend stack.">
@@ -71,7 +75,7 @@ const DashboardPage = () => {
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="rounded-[20px] border border-border bg-panel p-4">
               <p className="text-label">Project Coverage</p>
-              <p className="mt-3 font-display text-3xl text-text-primary">{stats.totalProjects || 0}</p>
+              <p className="mt-3 font-display text-3xl text-text-primary">{stats.totalProjects}</p>
               <div className="metric-strip">
                 <div className="h-full w-[72%] rounded-full bg-accent-primary" />
               </div>
@@ -79,7 +83,7 @@ const DashboardPage = () => {
             </div>
             <div className="rounded-[20px] border border-border bg-panel p-4">
               <p className="text-label">Inbox Pressure</p>
-              <p className="mt-3 font-display text-3xl text-text-primary">{stats.unreadMessages || 0}</p>
+              <p className="mt-3 font-display text-3xl text-text-primary">{stats.unreadMessages}</p>
               <div className="metric-strip">
                 <div className="h-full w-[48%] rounded-full bg-accent-yellow" />
               </div>
@@ -87,7 +91,7 @@ const DashboardPage = () => {
             </div>
             <div className="rounded-[20px] border border-border bg-panel p-4">
               <p className="text-label">Skill Surface</p>
-              <p className="mt-3 font-display text-3xl text-text-primary">{stats.totalSkills || 0}</p>
+              <p className="mt-3 font-display text-3xl text-text-primary">{stats.totalSkills}</p>
               <div className="metric-strip">
                 <div className="h-full w-[81%] rounded-full bg-accent-green" />
               </div>
@@ -153,7 +157,7 @@ const DashboardPage = () => {
 
         <DashboardCard title="Recent Activity" eyebrow="Activity Feed" description="The latest five CMS events in a compact admin-only feed.">
           <div className="space-y-3">
-            {(activityFeed.data || widgets.recentActivity || []).slice(0, 5).map((item) => (
+            {(widgets.activity || []).slice(0, 5).map((item) => (
               <div key={item._id || `${item.module}-${item.updatedAt || item.createdAt}`} className="rounded-[18px] border border-border bg-panel px-4 py-3">
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
@@ -174,7 +178,32 @@ const DashboardPage = () => {
       <div className="grid gap-4 xl:grid-cols-[1fr_0.95fr]">
         <DashboardCard title="Quick Actions" eyebrow="Fast Paths" description="Jump back into the most common content operations.">
           <div className="grid gap-4">
-            {(data?.quickActions || []).map((action, index) => (
+            {[
+              {
+                id: "projects",
+                label: "Manage Projects",
+                description: "Create, update, feature, and publish portfolio projects.",
+                href: "/admin/projects",
+              },
+              {
+                id: "profile",
+                label: "Update Profile",
+                description: "Edit public identity, social links, and primary portfolio copy.",
+                href: "/admin/profile",
+              },
+              {
+                id: "messages",
+                label: "Review Inbox",
+                description: "Check incoming contact messages and update their status.",
+                href: "/admin/messages",
+              },
+              {
+                id: "resume",
+                label: "Manage Resume",
+                description: "Upload or replace the current public resume document.",
+                href: "/admin/resume",
+              },
+            ].map((action, index) => (
               <QuickActionCard
                 key={action.id}
                 title={action.label}
@@ -189,9 +218,9 @@ const DashboardPage = () => {
       <div className="grid gap-4 xl:grid-cols-[1fr_0.95fr]">
         <DashboardCard title="System Context" eyebrow="Workspace" description="Useful runtime and delivery context for the current admin session.">
           <div className="grid gap-4 md:grid-cols-3">
-            <MetricCard label="Auth Mode" value={data?.system?.authMode || "JWT"} helper="Protected admin workspace" accent="primary" progress={65} />
-            <MetricCard label="Content Modules" value={data?.system?.contentModules || 0} helper="Managed content collections" accent="cyan" progress={85} />
-            <MetricCard label="Uploads" value={(data?.system?.uploadProviders || []).length || 0} helper={(data?.system?.uploadProviders || []).join(", ")} accent="green" progress={50} />
+            <MetricCard label="Auth Mode" value="JWT" helper="Protected admin workspace" accent="primary" progress={65} />
+            <MetricCard label="Content Modules" value={6} helper="Managed content collections" accent="cyan" progress={85} />
+            <MetricCard label="Uploads" value={2} helper="Image and resume pipelines" accent="green" progress={50} />
           </div>
         </DashboardCard>
         <DashboardCard title="Open Surfaces" eyebrow="Navigation" description="Most-used dashboard routes for day-to-day maintenance.">

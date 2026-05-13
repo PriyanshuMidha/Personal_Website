@@ -5,7 +5,10 @@ import useAsyncData from "../hooks/useAsyncData";
 import { publicApi } from "../api/publicApi";
 
 const ResumePage = () => {
-  const { data, loading, error } = useAsyncData(() => publicApi.getProfile(), []);
+  const { data, loading, error } = useAsyncData(() => publicApi.getProfile(), [], {
+    cacheKey: "public:profile",
+    staleTime: 5 * 60 * 1000,
+  });
 
   if (loading) return <Loader label="Loading resume..." />;
   if (error) return <ErrorState message={error} />;

@@ -8,6 +8,7 @@ import ErrorState from "../components/ErrorState";
 import ImageUploader from "../components/ImageUploader";
 import SectionHeader from "../components/SectionHeader";
 import useToast from "../hooks/useToast";
+import { invalidateCache } from "../utils/apiCache";
 import { normalizeProfilePayload, validateProfilePayload } from "../utils/cms";
 
 const formatProfileError = (error) => {
@@ -49,6 +50,7 @@ const emptyProfile = {
 const ProfilePage = () => {
   const [form, setForm] = useState(emptyProfile);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const toast = useToast();
 
@@ -88,15 +90,19 @@ const ProfilePage = () => {
       return;
     }
 
+    setSaving(true);
+
     try {
-      await adminApi.updateProfile(payload);
-      const refreshed = await adminApi.getProfile();
-      setForm({ ...emptyProfile, ...(refreshed.data || {}) });
+      const response = await adminApi.updateProfile(payload);
+      setForm({ ...emptyProfile, ...(response.data || {}) });
+      invalidateCache(["admin:dashboard:overview", "public:profile", "public:home"]);
       toast.success("Profile updated successfully.");
     } catch (saveError) {
       const message = formatProfileError(saveError);
       setError(message);
       toast.error(message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -180,8 +186,8 @@ const ProfilePage = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button type="submit" className="rounded-full bg-accent-primary px-6 py-3 font-semibold text-white">
-            Save profile
+          <button type="submit" disabled={saving} className="rounded-full bg-accent-primary px-6 py-3 font-semibold text-white disabled:opacity-60">
+            {saving ? "Saving..." : "Save profile"}
           </button>
           <a href="/about" target="_blank" rel="noopener noreferrer" className="rounded-full border border-border-soft px-5 py-3 text-sm text-text-secondary hover:text-text-primary">
             View public page

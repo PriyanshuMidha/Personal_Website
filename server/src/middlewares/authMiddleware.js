@@ -12,7 +12,7 @@ export const requireAuth = asyncHandler(async (req, _res, next) => {
 
   const token = authHeader.split(" ")[1];
   const payload = verifyToken(token);
-  const admin = await Admin.findById(payload.id).select("-password");
+  const admin = await Admin.findById(payload.id).select("-password").lean();
 
   if (!admin) {
     throw new ApiError(401, "Authenticated admin no longer exists");
@@ -21,4 +21,3 @@ export const requireAuth = asyncHandler(async (req, _res, next) => {
   req.admin = admin;
   next();
 });
-

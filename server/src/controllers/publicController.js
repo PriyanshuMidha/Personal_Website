@@ -6,15 +6,15 @@ import { achievementService } from "../services/achievementService.js";
 import { skillService } from "../services/skillService.js";
 import { educationService } from "../services/educationService.js";
 import { createMessage } from "../services/contactService.js";
-import { getDashboardStats } from "../services/dashboardService.js";
+import { getDashboardStats, getPublicHomeData } from "../services/dashboardService.js";
 
 export const getPublicProjects = asyncHandler(async (_req, res) => {
-  const projects = await projectService.listPublic();
+  const projects = await projectService.listPublicSummary();
   sendSuccess(res, 200, "Projects fetched", projects);
 });
 
 export const getFeaturedProjects = asyncHandler(async (_req, res) => {
-  const projects = await projectService.getFeaturedProjects();
+  const projects = await projectService.listFeaturedSummary();
   sendSuccess(res, 200, "Featured projects fetched", projects);
 });
 
@@ -44,8 +44,23 @@ export const getPublicEducation = asyncHandler(async (_req, res) => {
 });
 
 export const createContactMessage = asyncHandler(async (req, res) => {
-  const message = await createMessage(req.body);
-  sendSuccess(res, 201, "Contact message submitted", message);
+  const result = await createMessage(req.body);
+  const { notification } = result;
+
+  let responseMessage = "Message sent successfully.";
+
+  if (notification?.skipped) {
+    responseMessage = "Message saved, but contact email notifications are not configured.";
+  } else if (notification?.failed) {
+    responseMessage = "Message saved, but email notification delivery failed.";
+  }
+
+  sendSuccess(res, 201, responseMessage, result);
+});
+
+export const getPublicHome = asyncHandler(async (_req, res) => {
+  const data = await getPublicHomeData();
+  sendSuccess(res, 200, "Public home fetched", data);
 });
 
 export const getPublicDashboardStats = asyncHandler(async (_req, res) => {

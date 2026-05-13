@@ -15,6 +15,7 @@
 - Admin authentication uses JWT bearer tokens.
 - Health endpoints are available at both `GET /api/health` and `GET /health`, with the Render backend health check targeting `/api/health`.
 - Implemented public routes:
+  - `GET /api/public/home`
   - `GET /api/public/profile`
   - `GET /api/public/projects`
   - `GET /api/public/projects/featured`
@@ -30,6 +31,7 @@
   - `POST /api/admin/auth/login`
   - `GET /api/admin/auth/me`
   - `GET /api/admin/dashboard`
+  - `GET /api/admin/dashboard/overview`
   - `GET /api/admin/dashboard/stats`
   - `GET /api/admin/activity`
   - `GET/PUT /api/admin/profile`
@@ -38,6 +40,7 @@
   - `POST /api/admin/uploads/image`
   - `POST /api/admin/uploads/resume`
 - Security middleware includes `helmet`, `cors`, request rate limiting for API/login/contact, validation middleware, and centralized error handling.
+- Request logging now uses a compact Morgan format that records `method`, `url`, `status`, and `response-time` for production debugging and slow-endpoint audits.
 - Admin write routes now normalize incoming CMS payloads before Joi validation so booleans, numbers, arrays, trimmed strings, and nullable dates reach MongoDB in consistent shapes.
 - Validation failures now return a structured `errors[{ field, message }]` payload instead of raw message arrays, and local development logs normalized CMS payloads for save debugging.
 - Database config now reads `MONGO_URI` only from the local environment.
@@ -51,8 +54,12 @@
 - Server now starts listening even when MongoDB Atlas is unreachable; API routes return structured `503` responses until the database connection becomes healthy instead of failing at process startup.
 - Server startup now handles `EADDRINUSE` explicitly and prints a clean port-conflict message when port `5000` is already occupied.
 - `GET /api/admin/dashboard` now returns additive overview data beyond counts: richer stats, recent messages, recently updated projects, quick actions, and lightweight system metadata.
+- `GET /api/public/home` now aggregates public landing-page content in one backend call using `Promise.all`, returning `profile`, `featuredProjects`, preview slices for `skills`, `experience`, `achievements`, plus public stats widgets.
+- `GET /api/admin/dashboard/overview` now aggregates admin dashboard cards in one backend call using `Promise.all`, returning top-line counts, recent projects/messages, activity, completion, heatmap, and impact/status widgets.
 - `GET /api/admin/dashboard/stats` and `GET /api/public/dashboard-stats` now return LeetCode-inspired widget data: portfolio completion, skill topic progress, project status splits, impact totals, heatmap cells, and recent activity.
 - `GET /api/admin/activity` and `GET /api/public/activity` now expose CMS-driven activity feeds, with the public endpoint returning a safe subset of fields.
+- Admin list APIs now paginate at the backend with query params such as `page`, `limit`, `search`, `status`, and `category` instead of returning full collections by default.
+- Public project list responses are now lightweight summary payloads; full `longDescription` and `screenshots` stay on `GET /api/public/projects/:slug`.
 - Admin activity is now sorted by `updatedAt`/`createdAt`, and repeated profile updates within 10 minutes are deduplicated into the latest profile activity entry instead of creating dashboard-cluttering duplicates.
 - MongoDB bootstrap now uses bounded server selection timeout, prefers IPv4 resolution, and surfaces clearer Atlas/network diagnostic guidance on failure.
 - Server startup logging was tightened so missing `MONGO_URI` and MongoDB connection failures are reported with cleaner, more actionable messages.
@@ -62,12 +69,19 @@
 
 - Singleton `Profile` stores personal info, social links, resume metadata, and CMS-oriented fields such as `name/fullName`, `shortIntro`, `about`, `currentRole`, `currentCompany`, direct social URLs, and direct image/resume URLs.
 - Collection models: `Project`, `Experience`, `Achievement`, `Skill`, `Education`, `ContactMessage`.
+- Collection indexes now support the heaviest CMS/public filters:
+  - `Project`: `isPublished`, `isFeatured`, `displayOrder`, `status`, `category`, `slug`
+  - `Skill`: `isPublished`, `category`, `displayOrder`
+  - `Experience`: `isPublished`, `displayOrder`
+  - `Achievement`: `isPublished`, `isFeatured`, `displayOrder`
+  - `ContactMessage`: `status`, `createdAt`
 - `ActivityLog` now records create/update/delete/upload actions for projects, skills, experience, achievements, education, profile updates, and resume changes.
 - `ActivityLog` now keeps `updatedAt` so deduplicated profile-update events can refresh their admin-visible timestamp without multiplying public/admin activity noise.
 - Published public content is filtered with `isPublished` and sorted with `displayOrder`.
 - `Project` uses unique slugs, exact CMS-enforced category/status enums, and supports Cloudinary-backed or local-fallback `screenshots`.
 - `ContactMessage` supports statuses `new`, `read`, `replied`, and `archived`.
 - Public contact submissions are always stored in `ContactMessage`, and the server now also attempts an email notification via a provider-backed server call when `CONTACT_NOTIFICATION_*` / `RESEND_API_KEY` environment variables are configured.
+- `POST /api/public/contact` now returns an accurate delivery status message: successful email delivery stays green on the frontend, while skipped/misconfigured or provider-failed notifications are surfaced as a saved-but-not-emailed warning instead of a false success state.
 - CRUD and profile/upload services now emit activity logs so dashboard widgets and heatmaps update from Mongo-backed behavior instead of hardcoded data.
 - Image and resume uploads prefer Cloudinary, but local development now falls back to server-hosted files under `/uploads/*` when Cloudinary credentials are missing so CMS upload flows still work on localhost.
 
@@ -86,7 +100,11 @@
 - Shared frontend primitives now include `AppShell`, `PageHeader`, `DashboardCard`, `QuickActionCard`, `SectionPanel`, `AdminDataTable`, `AdminFormPanel`, metric cards with progress strips, `ProgressRing`, `TopicProgressList`, `StatusSplitCard`, `HeatmapGrid`, and `ActivityFeedCard`.
 - Admin and public overview pages now render LeetCode-inspired progress widgets driven by MongoDB APIs instead of static assumptions.
 - The admin profile page now exposes direct CMS fields for editable intro/about/social/current-role content, so public profile pages can be updated without code changes.
-- Admin save flows now surface toast-style success/error notifications for profile updates, CRUD content saves/deletes, message status changes, and asset uploads; content editors also refetch the live data after save so the admin state mirrors the API result.
+- Public route data now uses a small shared cache/in-flight dedupe layer, with the home page pulling from `/api/public/home` and other public pages caching API responses for roughly five minutes to avoid duplicate page-load calls.
+- Hot read paths now favor lean Mongo queries for public profile/home data and admin auth hydration, and the frontend auth hook dedupes `GET /api/admin/auth/me` hydration in development so `React.StrictMode` does not create an extra identical session-restore request.
+- The admin dashboard now loads from `/api/admin/dashboard/overview` in one request and shows skeleton cards while the combined payload is loading.
+- Admin resource tables and the message inbox now load paginated slices, expose lightweight search/filter controls, and use local row updates after create/update/delete/status changes instead of refetching unrelated CMS modules.
+- Admin save flows now surface toast-style success/error notifications for profile updates, CRUD content saves/deletes, message status changes, and asset uploads; successful writes invalidate only the affected public/admin cache keys so later views refresh without a full app-wide reload.
 - Admin resource editors now use exact select enums for project category/status and skill category/level, provide a `View public page` shortcut, default dropdowns and `displayOrder` to valid values, clamp negative display ordering client-side, and normalize trimmed/array-safe payloads before save APIs.
 - Admin JSON writes now flow through one shared helper that applies bearer auth automatically for protected `POST`/`PUT`/`PATCH` requests, while upload endpoints remain multipart with bearer auth only.
 - The admin profile and CRUD editors now run frontend validation before save for required fields, non-negative numeric fields, email/url formatting, and exact backend validation errors are surfaced back through inline error text plus toast notifications.

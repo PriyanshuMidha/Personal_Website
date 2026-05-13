@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import Loader from "../components/Loader";
+import { Link, useOutletContext } from "react-router-dom";
 import ErrorState from "../components/ErrorState";
 import EmptyState from "../components/EmptyState";
 import ProjectCard from "../components/ProjectCard";
@@ -14,34 +13,28 @@ import QuickActionCard from "../components/QuickActionCard";
 import ProgressRing from "../components/ProgressRing";
 import TopicProgressList from "../components/TopicProgressList";
 import StatusSplitCard from "../components/StatusSplitCard";
-import useAsyncData from "../hooks/useAsyncData";
-import { publicApi } from "../api/publicApi";
+import HomePageSkeleton from "../components/HomePageSkeleton";
 
 const HomePage = () => {
-  const profile = useAsyncData(() => publicApi.getProfile(), []);
-  const featuredProjects = useAsyncData(() => publicApi.getFeaturedProjects(), []);
-  const projects = useAsyncData(() => publicApi.getProjects(), []);
-  const achievements = useAsyncData(() => publicApi.getAchievements(), []);
-  const skills = useAsyncData(() => publicApi.getSkills(), []);
-  const experience = useAsyncData(() => publicApi.getExperience(), []);
-  const dashboardStats = useAsyncData(() => publicApi.getDashboardStats(), []);
+  const { homeData, homeLoading, homeError } = useOutletContext();
 
-  if ([profile, featuredProjects, projects, achievements, skills, experience, dashboardStats].some((entry) => entry.loading)) {
-    return <Loader label="Loading control-room homepage..." />;
-  }
+  if (homeLoading) return <HomePageSkeleton />;
+  if (homeError) return <ErrorState message={homeError} />;
 
-  if (profile.error) return <ErrorState message={profile.error} />;
-  if (dashboardStats.error) return <ErrorState message={dashboardStats.error} />;
-
-  const displayName = profile.data?.fullName || profile.data?.name || "Priyanshu Midha";
-  const statsPayload = dashboardStats.data || {};
-  const firstLiveProject = (featuredProjects.data || projects.data || []).find((project) => project.liveUrl);
+  const profile = homeData?.profile || null;
+  const featuredProjects = homeData?.featuredProjects || [];
+  const skillsPreview = homeData?.skillsPreview || [];
+  const experiencePreview = homeData?.experiencePreview || [];
+  const achievementsPreview = homeData?.achievementsPreview || [];
+  const statsPayload = homeData?.publicStats || {};
+  const displayName = profile?.fullName || profile?.name || "Priyanshu Midha";
+  const firstLiveProject = featuredProjects.find((project) => project.liveUrl);
   const quickActions = [
-    profile.data?.githubUrl
+    profile?.githubUrl
       ? {
           title: "View GitHub",
           description: "Inspect repositories, architecture decisions, and implementation detail.",
-          href: profile.data.githubUrl,
+          href: profile.githubUrl,
           external: true,
           accent: "purple",
         }
@@ -57,18 +50,18 @@ const HomePage = () => {
       : null,
     {
       title: "Download Resume",
-      description: profile.data?.resumeUrl ? "Open the latest CMS-managed resume in a new tab." : "Resume not uploaded yet. Visit the resume page for status.",
-      href: profile.data?.resumeUrl || "/resume",
-      external: Boolean(profile.data?.resumeUrl),
+      description: profile?.resumeUrl ? "Open the latest CMS-managed resume in a new tab." : "Resume not uploaded yet. Visit the resume page for status.",
+      href: profile?.resumeUrl || "/resume",
+      external: Boolean(profile?.resumeUrl),
       accent: "green",
     },
     { title: "Contact Me", description: "Start a conversation about backend work, systems, or product delivery.", href: "/contact", accent: "yellow" },
   ].filter(Boolean);
   const stats = [
-    { label: "Projects Built", value: (projects.data || []).length, helper: "Production-ready portfolio systems", accent: "purple", progress: 72 },
-    { label: "Backend Stack", value: `${new Set((skills.data || []).map((skill) => skill.category).filter(Boolean)).size || 1}+`, helper: "Core platform categories in rotation", accent: "cyan", progress: 64 },
-    { label: "Production Impact", value: `${(achievements.data || []).length}+`, helper: "Outcome snapshots and measurable wins", accent: "green", progress: 58 },
-    { label: "Current Focus", value: profile.data?.currentRole || "Backend systems", helper: "Primary engineering direction right now", accent: "yellow", progress: 81 },
+    { label: "Projects Built", value: statsPayload.impactStats?.projectsBuilt || featuredProjects.length, helper: "Production-ready portfolio systems", accent: "purple", progress: 72 },
+    { label: "Backend Stack", value: `${new Set(skillsPreview.map((skill) => skill.category).filter(Boolean)).size || 1}+`, helper: "Core platform categories in rotation", accent: "cyan", progress: 64 },
+    { label: "Production Impact", value: `${statsPayload.impactStats?.achievementsAdded || achievementsPreview.length}+`, helper: "Outcome snapshots and measurable wins", accent: "green", progress: 58 },
+    { label: "Current Focus", value: profile?.currentRole || "Backend systems", helper: "Primary engineering direction right now", accent: "yellow", progress: 81 },
   ];
 
   return (
@@ -90,9 +83,9 @@ const HomePage = () => {
 
       <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <DashboardCard
-          title={profile.data?.headline || "Building backend systems with control-room clarity."}
+          title={profile?.headline || "Building backend systems with control-room clarity."}
           eyebrow="Journey Overview"
-          description={profile.data?.heroDescription || "A read-only engineering workspace focused on APIs, reliability, shipping discipline, and the kind of product execution that stays clean under pressure."}
+          description={profile?.heroDescription || "A read-only engineering workspace focused on APIs, reliability, shipping discipline, and the kind of product execution that stays clean under pressure."}
           className="grid-overlay"
         >
           <div className="space-y-5">
@@ -103,14 +96,14 @@ const HomePage = () => {
             </div>
             <div className="grid gap-4 md:grid-cols-[1fr_240px]">
               <div>
-                <p className="text-sm leading-8 text-text-secondary">{profile.data?.aboutDescription || profile.data?.bio || "Add your engineering story, principles, and product perspective from the admin CMS."}</p>
+                <p className="text-sm leading-8 text-text-secondary">{profile?.aboutDescription || profile?.bio || "Add your engineering story, principles, and product perspective from the admin CMS."}</p>
               </div>
               <div className="rounded-[20px] border border-border bg-panel p-4">
                 <p className="text-label">Developer status</p>
-                <h3 className="mt-3 font-display text-xl text-text-primary">{profile.data?.fullName || "Portfolio Owner"}</h3>
-                <p className="mt-2 text-sm leading-7 text-text-secondary">{profile.data?.subheadline || "Backend-focused engineer with a systems-first product mindset."}</p>
+                <h3 className="mt-3 font-display text-xl text-text-primary">{profile?.fullName || "Portfolio Owner"}</h3>
+                <p className="mt-2 text-sm leading-7 text-text-secondary">{profile?.subheadline || "Backend-focused engineer with a systems-first product mindset."}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {(profile.data?.specialties || []).slice(0, 4).map((item) => (
+                  {(profile?.specialties || []).slice(0, 4).map((item) => (
                     <StatusBadge key={item} tone="primary">{item}</StatusBadge>
                   ))}
                 </div>
@@ -143,9 +136,9 @@ const HomePage = () => {
 
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <DashboardCard title="Featured Projects" eyebrow="Spotlight" description="Selected builds that show architecture decisions, execution depth, and practical backend thinking.">
-          {(featuredProjects.data || []).length ? (
+          {featuredProjects.length ? (
             <div className="grid gap-4 md:grid-cols-2">
-              {featuredProjects.data.slice(0, 4).map((project) => (
+              {featuredProjects.map((project) => (
                 <ProjectCard key={project._id} project={project} />
               ))}
             </div>
@@ -157,14 +150,14 @@ const HomePage = () => {
         <div className="grid gap-4">
           <DashboardCard title="Skills" eyebrow="Capability Surface" description="Backend stack, tooling, and operating comfort zones.">
             <div className="grid gap-4">
-              {(skills.data || []).slice(0, 4).map((skill) => (
+              {skillsPreview.map((skill) => (
                 <SkillCard key={skill._id} skill={skill} />
               ))}
             </div>
           </DashboardCard>
           <DashboardCard title="Achievements" eyebrow="Impact Snapshot" description="A compact view of outcomes and delivery wins.">
             <div className="space-y-4">
-              {(achievements.data || []).slice(0, 2).map((achievement) => (
+              {achievementsPreview.map((achievement) => (
                 <AchievementCard key={achievement._id} achievement={achievement} />
               ))}
             </div>
@@ -174,7 +167,7 @@ const HomePage = () => {
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <DashboardCard title="Backend Journey" eyebrow="Experience" description="Recent roles and systems work arranged as a dense operational timeline.">
-          <ExperienceTimeline items={(experience.data || []).slice(0, 3)} />
+          <ExperienceTimeline items={experiencePreview} />
         </DashboardCard>
         <DashboardCard title="Resume Status" eyebrow="Document" description="Keep the public resume ready and accessible without cluttering the overview.">
           <div className="space-y-4">
@@ -187,12 +180,12 @@ const HomePage = () => {
               </p>
             </div>
             <a
-              href={profile.data?.resumeUrl || "/resume"}
-              target={profile.data?.resumeUrl ? "_blank" : undefined}
-              rel={profile.data?.resumeUrl ? "noopener noreferrer" : undefined}
+              href={profile?.resumeUrl || "/resume"}
+              target={profile?.resumeUrl ? "_blank" : undefined}
+              rel={profile?.resumeUrl ? "noopener noreferrer" : undefined}
               className="inline-flex rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-text-primary"
             >
-              {profile.data?.resumeUrl ? "Open current resume" : "Go to resume page"}
+              {profile?.resumeUrl ? "Open current resume" : "Go to resume page"}
             </a>
           </div>
         </DashboardCard>

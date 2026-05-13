@@ -13,6 +13,7 @@ import DataTable from "../components/DataTable";
 import ConfirmDialog from "../components/ConfirmDialog";
 import StatusBadge from "../components/StatusBadge";
 import useToast from "../hooks/useToast";
+import { invalidateCache } from "../utils/apiCache";
 import { buildResourceInitialState, normalizeResourcePayload, validateResourcePayload } from "../utils/cms";
 
 const formatSaveError = (error) => {
@@ -28,10 +29,71 @@ const normalizeDateValue = (value) => {
   return String(value).slice(0, 10);
 };
 
+const getInvalidatePrefixes = (endpoint) => {
+  switch (endpoint) {
+    case "/admin/projects":
+      return ["admin:dashboard:overview", "public:home", "public:projects", "public:featured-projects"];
+    case "/admin/skills":
+      return ["admin:dashboard:overview", "public:home", "public:skills"];
+    case "/admin/experience":
+      return ["admin:dashboard:overview", "public:home", "public:experience"];
+    case "/admin/achievements":
+      return ["admin:dashboard:overview", "public:home", "public:achievements"];
+    case "/admin/education":
+      return ["public:education"];
+    default:
+      return [];
+  }
+};
+
+const buildCreateState = (currentRows, item, pageSize, page) => {
+  if (page !== 1) {
+    return currentRows;
+  }
+
+  return [item, ...currentRows].slice(0, pageSize);
+};
+
+const PaginationBar = ({ page, pages, total, onPageChange }) => {
+  if (!total) return null;
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-border bg-card px-4 py-3 text-sm text-text-secondary">
+      <p>
+        Page {page} of {pages || 1} · {total} total
+      </p>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+          className="rounded-full border border-border-soft px-4 py-2 disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <button
+          type="button"
+          disabled={page >= pages}
+          onClick={() => onPageChange(page + 1)}
+          className="rounded-full border border-border-soft px-4 py-2 disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const ResourceManagerPage = ({ config }) => {
   const initialState = useMemo(() => buildResourceInitialState(config), [config]);
+  const pageSize = config.pageSize || 10;
   const [rows, setRows] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: pageSize, total: 0, pages: 1 });
+  const [filters, setFilters] = useState({});
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [editingItem, setEditingItem] = useState(null);
@@ -39,12 +101,18 @@ const ResourceManagerPage = ({ config }) => {
   const [pendingDelete, setPendingDelete] = useState(null);
   const toast = useToast();
 
-  const load = async () => {
+  const load = async ({ nextPage = pagination.page, nextSearch = search, nextFilters = filters } = {}) => {
     setLoading(true);
     setError("");
     try {
-      const response = await adminApi.listResource(config.endpoint);
+      const response = await adminApi.listResource(config.endpoint, {
+        page: nextPage,
+        limit: pageSize,
+        search: nextSearch,
+        ...nextFilters,
+      });
       setRows(response.data.items || []);
+      setPagination(response.data.pagination || { page: nextPage, limit: pageSize, total: 0, pages: 1 });
     } catch (loadError) {
       setError(loadError.message || `Unable to load ${config.title.toLowerCase()}`);
     } finally {
@@ -57,8 +125,12 @@ const ResourceManagerPage = ({ config }) => {
   }, [initialState]);
 
   useEffect(() => {
-    load();
-  }, [config.endpoint]);
+    setFilters({});
+    setSearch("");
+    setSearchInput("");
+    setPagination((current) => ({ ...current, page: 1, limit: pageSize }));
+    load({ nextPage: 1, nextSearch: "", nextFilters: {} });
+  }, [config.endpoint, pageSize]);
 
   const setField = (key, value) => setForm((current) => ({ ...current, [key]: value }));
 
@@ -74,6 +146,16 @@ const ResourceManagerPage = ({ config }) => {
     setForm({ ...initialState, ...normalized });
   };
 
+  const resetEditor = () => {
+    setEditingItem(null);
+    setSaveError("");
+    setForm(initialState);
+  };
+
+  const invalidateAffectedCaches = () => {
+    invalidateCache(getInvalidatePrefixes(config.endpoint));
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSaveError("");
@@ -87,22 +169,34 @@ const ResourceManagerPage = ({ config }) => {
       return;
     }
 
+    setSaving(true);
+
     try {
       if (editingItem?._id) {
-        await adminApi.updateResource(config.endpoint, editingItem._id, payload);
+        const response = await adminApi.updateResource(config.endpoint, editingItem._id, payload);
+        const savedItem = response.data;
+        setRows((currentRows) => currentRows.map((row) => (row._id === savedItem._id ? savedItem : row)));
         toast.success(`${config.singularLabel || config.title.slice(0, -1)} updated successfully.`);
       } else {
-        await adminApi.createResource(config.endpoint, payload);
+        const response = await adminApi.createResource(config.endpoint, payload);
+        const savedItem = response.data;
+        setRows((currentRows) => buildCreateState(currentRows, savedItem, pageSize, pagination.page));
+        setPagination((current) => ({
+          ...current,
+          total: current.total + 1,
+          pages: Math.max(1, Math.ceil((current.total + 1) / current.limit)),
+        }));
         toast.success(`${config.singularLabel || config.title.slice(0, -1)} created successfully.`);
       }
 
-      setEditingItem(null);
-      setForm(initialState);
-      await load();
+      invalidateAffectedCaches();
+      resetEditor();
     } catch (err) {
       const message = formatSaveError(err);
       setSaveError(message);
       toast.error(message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -140,22 +234,80 @@ const ResourceManagerPage = ({ config }) => {
 
       <div className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
         <section className="space-y-4">
-          <DataTable
-            columns={columns}
-            rows={rows}
-            emptyTitle={`No ${config.title.toLowerCase()} yet`}
-            emptyDescription={`Create your first ${config.title.slice(0, -1).toLowerCase()} using the editor panel.`}
-            actions={(row) => (
-              <div className="flex flex-wrap items-center gap-3">
-                <button type="button" onClick={() => handleEdit(row)} className="text-accent-primary hover:text-text-primary">
-                  Edit
-                </button>
-                <button type="button" onClick={() => setPendingDelete(row)} className="text-red-300 hover:text-text-primary">
-                  Delete
-                </button>
-              </div>
-            )}
-          />
+          <div className="card-surface flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="w-full lg:max-w-sm">
+              <FormInput label="Search" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} />
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
+              {(config.listFilters || []).map((filter) => (
+                <label key={filter.name} className="grid gap-2 text-sm text-text-secondary">
+                  <span>{filter.label}</span>
+                  <select
+                    value={filters[filter.name] || ""}
+                    onChange={(event) => {
+                      const nextFilters = { ...filters, [filter.name]: event.target.value };
+                      setFilters(nextFilters);
+                      setPagination((current) => ({ ...current, page: 1 }));
+                      load({ nextPage: 1, nextSearch: search, nextFilters });
+                    }}
+                    className="rounded-full border border-border-soft bg-card px-4 py-2 text-sm text-text-primary"
+                  >
+                    {filter.options.map((option) => (
+                      <option key={option || "all"} value={option} className="bg-night">
+                        {option || `All ${filter.label}`}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch(searchInput.trim());
+                  setPagination((current) => ({ ...current, page: 1 }));
+                  load({ nextPage: 1, nextSearch: searchInput.trim(), nextFilters: filters });
+                }}
+                className="rounded-full border border-border-soft px-5 py-3 text-sm text-text-secondary"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+
+          {rows.length ? (
+            <>
+              <DataTable
+                columns={columns}
+                rows={rows}
+                emptyTitle={`No ${config.title.toLowerCase()} yet`}
+                emptyDescription={`Create your first ${config.title.slice(0, -1).toLowerCase()} using the editor panel.`}
+                actions={(row) => (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button type="button" onClick={() => handleEdit(row)} className="text-accent-primary hover:text-text-primary">
+                      Edit
+                    </button>
+                    <button type="button" onClick={() => setPendingDelete(row)} className="text-red-300 hover:text-text-primary">
+                      Delete
+                    </button>
+                  </div>
+                )}
+              />
+              <PaginationBar
+                page={pagination.page}
+                pages={pagination.pages}
+                total={pagination.total}
+                onPageChange={(nextPage) => {
+                  setPagination((current) => ({ ...current, page: nextPage }));
+                  load({ nextPage });
+                }}
+              />
+            </>
+          ) : (
+            <EmptyState
+              title={`No ${config.title.toLowerCase()} yet`}
+              description={search || Object.values(filters).some(Boolean) ? "Try adjusting the current filters or search term." : `Create your first ${config.title.slice(0, -1).toLowerCase()} using the editor panel.`}
+            />
+          )}
         </section>
 
         <form onSubmit={handleSubmit} className="shell space-y-5 p-6">
@@ -168,10 +320,7 @@ const ResourceManagerPage = ({ config }) => {
             </div>
             <button
               type="button"
-              onClick={() => {
-                setEditingItem(null);
-                setForm(initialState);
-              }}
+              onClick={resetEditor}
               className="rounded-full border border-border-soft px-4 py-2 text-sm text-text-secondary"
             >
               Reset
@@ -242,8 +391,8 @@ const ResourceManagerPage = ({ config }) => {
           {saveError ? <p className="text-sm text-red-300">{saveError}</p> : null}
 
           <div className="flex flex-wrap items-center gap-3">
-            <button type="submit" className="rounded-full bg-accent-primary px-6 py-3 font-semibold text-white">
-              {editingItem ? "Update entry" : "Create entry"}
+            <button type="submit" disabled={saving} className="rounded-full bg-accent-primary px-6 py-3 font-semibold text-white disabled:opacity-60">
+              {saving ? (editingItem ? "Updating..." : "Creating...") : editingItem ? "Update entry" : "Create entry"}
             </button>
             {config.publicPath ? (
               <a
@@ -267,9 +416,19 @@ const ResourceManagerPage = ({ config }) => {
         onCancel={() => setPendingDelete(null)}
         onConfirm={async () => {
           try {
-            await adminApi.deleteResource(config.endpoint, pendingDelete._id);
+            const currentDelete = pendingDelete;
+            await adminApi.deleteResource(config.endpoint, currentDelete._id);
+            setRows((currentRows) => currentRows.filter((row) => row._id !== currentDelete._id));
+            setPagination((current) => {
+              const nextTotal = Math.max(0, current.total - 1);
+              return {
+                ...current,
+                total: nextTotal,
+                pages: Math.max(1, Math.ceil(nextTotal / current.limit)),
+              };
+            });
             setPendingDelete(null);
-            await load();
+            invalidateAffectedCaches();
             toast.success(`${config.singularLabel || config.title.slice(0, -1)} deleted successfully.`);
           } catch (deleteError) {
             const message = formatSaveError(deleteError);

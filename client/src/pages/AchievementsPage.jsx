@@ -7,7 +7,10 @@ import useAsyncData from "../hooks/useAsyncData";
 import { publicApi } from "../api/publicApi";
 
 const AchievementsPage = () => {
-  const { data, loading, error } = useAsyncData(() => publicApi.getAchievements(), []);
+  const { data, loading, error } = useAsyncData(() => publicApi.getAchievements(), [], {
+    cacheKey: "public:achievements",
+    staleTime: 5 * 60 * 1000,
+  });
 
   if (loading) return <Loader label="Loading achievements..." />;
   if (error) return <ErrorState message={error} />;
