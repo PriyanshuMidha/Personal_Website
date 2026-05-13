@@ -32,4 +32,10 @@ export const achievementService = {
   async getFeatured() {
     return crud.listPublic({ isFeatured: true });
   },
+  async listPreview(limit = 2) {
+    return Achievement.find({ isPublished: true })
+      .sort({ displayOrder: 1, createdAt: -1 })
+      .limit(limit)
+      .select("title category description impact date isFeatured displayOrder");
+  },
 };

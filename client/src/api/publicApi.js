@@ -1,6 +1,7 @@
 import { apiRequest } from "./http";
 
 export const publicApi = {
+  getHome: () => apiRequest("/public/home"),
   getProfile: () => apiRequest("/public/profile"),
   getProjects: () => apiRequest("/public/projects"),
   getFeaturedProjects: () => apiRequest("/public/projects/featured"),

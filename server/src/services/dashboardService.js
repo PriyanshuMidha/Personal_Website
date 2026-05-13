@@ -4,7 +4,11 @@ import Achievement from "../models/Achievement.js";
 import Skill from "../models/Skill.js";
 import Education from "../models/Education.js";
 import ContactMessage from "../models/ContactMessage.js";
-import { getProfile } from "./profileService.js";
+import { getProfile, getSerializedProfile } from "./profileService.js";
+import { projectService } from "./projectService.js";
+import { skillService } from "./skillService.js";
+import { experienceService } from "./experienceService.js";
+import { achievementService } from "./achievementService.js";
 import { buildHeatmapData, listActivity, normalizeSkillCategory, skillTopicOrderList } from "./activityService.js";
 
 const buildProjectStatusStats = async (publishedOnly = false) => {
@@ -188,5 +192,76 @@ export const getDashboardSummary = async () => {
       contentModules: 6,
       uploadProviders: ["Cloudinary", "Local Upload Fallback", "Resume Upload"],
     },
+  };
+};
+
+export const getPublicHomeData = async () => {
+  const [profile, featuredProjects, skillsPreview, experiencePreview, achievementsPreview, publicStats] = await Promise.all([
+    getSerializedProfile({ publishedOnly: true }),
+    projectService.listFeaturedSummary(4),
+    skillService.listPreview(4),
+    experienceService.listPreview(3),
+    achievementService.listPreview(2),
+    getDashboardStats({ publishedOnly: true }),
+  ]);
+
+  return {
+    profile,
+    featuredProjects,
+    skillsPreview,
+    experiencePreview,
+    achievementsPreview,
+    publicStats,
+  };
+};
+
+export const getAdminDashboardOverview = async () => {
+  const [
+    totalProjects,
+    featuredProjects,
+    totalSkills,
+    unreadMessages,
+    recentProjects,
+    recentMessages,
+    activity,
+    portfolioCompletion,
+    topicProgress,
+    projectStatus,
+    heatmap,
+    impactStats,
+  ] = await Promise.all([
+    Project.countDocuments(),
+    Project.countDocuments({ isFeatured: true }),
+    Skill.countDocuments(),
+    ContactMessage.countDocuments({ status: "new" }),
+    Project.find()
+      .sort({ updatedAt: -1 })
+      .limit(5)
+      .select("title slug status isFeatured isPublished updatedAt category"),
+    ContactMessage.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("name email subject status createdAt"),
+    listActivity({ limit: 5 }),
+    buildPortfolioCompletion(),
+    buildSkillTopicProgress(false),
+    buildProjectStatusStats(false),
+    buildHeatmapData(),
+    buildImpactStats(false),
+  ]);
+
+  return {
+    totalProjects,
+    featuredProjects,
+    totalSkills,
+    unreadMessages,
+    recentProjects,
+    recentMessages,
+    activity,
+    portfolioCompletion,
+    topicProgress,
+    projectStatus,
+    heatmap,
+    impactStats,
   };
 };

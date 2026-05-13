@@ -7,7 +7,10 @@ import useAsyncData from "../hooks/useAsyncData";
 import { publicApi } from "../api/publicApi";
 
 const SkillsPage = () => {
-  const { data, loading, error } = useAsyncData(() => publicApi.getSkills(), []);
+  const { data, loading, error } = useAsyncData(() => publicApi.getSkills(), [], {
+    cacheKey: "public:skills",
+    staleTime: 5 * 60 * 1000,
+  });
 
   if (loading) return <Loader label="Loading skills..." />;
   if (error) return <ErrorState message={error} />;

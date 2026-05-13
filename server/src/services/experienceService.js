@@ -27,3 +27,9 @@ export const experienceService = createCrudService(Experience, {
       description: `Deleted experience entry for ${item.role} at ${item.company}.`,
     }),
 });
+
+experienceService.listPreview = async (limit = 3) =>
+  Experience.find({ isPublished: true })
+    .sort({ displayOrder: 1, startDate: -1 })
+    .limit(limit)
+    .select("company role startDate endDate isCurrent location description techStack displayOrder");

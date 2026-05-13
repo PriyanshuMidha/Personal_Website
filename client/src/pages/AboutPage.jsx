@@ -6,7 +6,10 @@ import useAsyncData from "../hooks/useAsyncData";
 import { publicApi } from "../api/publicApi";
 
 const AboutPage = () => {
-  const { data, loading, error } = useAsyncData(() => publicApi.getProfile(), []);
+  const { data, loading, error } = useAsyncData(() => publicApi.getProfile(), [], {
+    cacheKey: "public:profile",
+    staleTime: 5 * 60 * 1000,
+  });
 
   if (loading) return <Loader label="Loading profile..." />;
   if (error) return <ErrorState message={error} />;

@@ -7,7 +7,10 @@ import useAsyncData from "../hooks/useAsyncData";
 import { publicApi } from "../api/publicApi";
 
 const ExperiencePage = () => {
-  const { data, loading, error } = useAsyncData(() => publicApi.getExperience(), []);
+  const { data, loading, error } = useAsyncData(() => publicApi.getExperience(), [], {
+    cacheKey: "public:experience",
+    staleTime: 5 * 60 * 1000,
+  });
 
   if (loading) return <Loader label="Loading experience..." />;
   if (error) return <ErrorState message={error} />;

@@ -18,20 +18,29 @@ const socialIconMap = {
 
 const PublicLayout = () => {
   const location = useLocation();
+  const isHomeRoute = location.pathname === "/";
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const profile = useAsyncData(() => publicApi.getProfile(), []);
+  const publicData = useAsyncData(
+    () => (isHomeRoute ? publicApi.getHome() : publicApi.getProfile()),
+    [isHomeRoute],
+    {
+      cacheKey: isHomeRoute ? "public:home" : "public:profile",
+      staleTime: 5 * 60 * 1000,
+    }
+  );
 
   const currentLink = useMemo(
     () => publicNavLinks.find((link) => (link.path === "/" ? location.pathname === "/" : location.pathname.startsWith(link.path))),
     [location.pathname]
   );
-  const displayName = profile.data?.fullName || profile.data?.name || "Priyanshu Midha";
-  const githubUrl = profile.data?.githubUrl || "";
-  const linkedinUrl = profile.data?.linkedinUrl || "";
-  const instagramUrl = profile.data?.instagramUrl || "";
-  const resumeUrl = profile.data?.resumeUrl || "";
-  const customSocialLinks = (profile.data?.socialLinks || []).filter((link) => {
+  const profile = isHomeRoute ? publicData.data?.profile : publicData.data;
+  const displayName = profile?.fullName || profile?.name || "Priyanshu Midha";
+  const githubUrl = profile?.githubUrl || "";
+  const linkedinUrl = profile?.linkedinUrl || "";
+  const instagramUrl = profile?.instagramUrl || "";
+  const resumeUrl = profile?.resumeUrl || "";
+  const customSocialLinks = (profile?.socialLinks || []).filter((link) => {
     const platform = String(link?.platform || "").toLowerCase();
     return link?.url && !["github", "linkedin", "instagram"].includes(platform);
   });
@@ -66,9 +75,9 @@ const PublicLayout = () => {
       }
       topbar={
         <Topbar
-          title={location.pathname === "/" ? displayName : currentLink?.label || "Portfolio"}
-          subtitle={location.pathname === "/" ? "Personal Portfolio" : "Public Workspace"}
-          titleClassName={location.pathname === "/" ? "text-3xl md:text-4xl" : "text-2xl"}
+          title={isHomeRoute ? displayName : currentLink?.label || "Portfolio"}
+          subtitle={isHomeRoute ? "Personal Portfolio" : "Public Workspace"}
+          titleClassName={isHomeRoute ? "text-3xl md:text-4xl" : "text-2xl"}
           onOpenSidebar={() => setMobileOpen(true)}
           rightContent={
             <div className="hidden items-center gap-2 md:flex">
@@ -120,7 +129,7 @@ const PublicLayout = () => {
       }
     >
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <Outlet />
+        <Outlet context={{ homeData: isHomeRoute ? publicData.data : null, homeLoading: isHomeRoute ? publicData.loading : false, homeError: isHomeRoute ? publicData.error : "" }} />
       </motion.div>
     </AppShell>
   );

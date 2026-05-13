@@ -3,6 +3,7 @@ import validate from "../middlewares/validate.js";
 import { getPublicProfile } from "../controllers/profileController.js";
 import {
   createContactMessage,
+  getPublicHome,
   getPublicDashboardStats,
   getFeaturedProjects,
   getProjectBySlug,
@@ -18,6 +19,7 @@ import { contactSchema } from "../validators/contactValidators.js";
 const router = Router();
 
 router.get("/profile", getPublicProfile);
+router.get("/home", getPublicHome);
 router.get("/projects", getPublicProjects);
 router.get("/projects/featured", getFeaturedProjects);
 router.get("/projects/:slug", getProjectBySlug);

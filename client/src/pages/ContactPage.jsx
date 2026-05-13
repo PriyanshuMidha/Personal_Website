@@ -7,18 +7,26 @@ import StatusBadge from "../components/StatusBadge";
 
 const ContactPage = () => {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
-  const [status, setStatus] = useState({ loading: false, success: "", error: "" });
+  const [status, setStatus] = useState({ loading: false, success: "", warning: "", error: "" });
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setStatus({ loading: true, success: "", error: "" });
+    setStatus({ loading: true, success: "", warning: "", error: "" });
 
     try {
-      await publicApi.submitContact(form);
-      setStatus({ loading: false, success: "Message sent successfully.", error: "" });
+      const response = await publicApi.submitContact(form);
+      const notification = response?.data?.notification;
+      const message = response?.message || "Message sent successfully.";
+
+      setStatus({
+        loading: false,
+        success: notification?.delivered ? message : "",
+        warning: notification?.delivered ? "" : message,
+        error: "",
+      });
       setForm({ name: "", email: "", subject: "", message: "" });
     } catch (error) {
-      setStatus({ loading: false, success: "", error: error.message || "Unable to send message." });
+      setStatus({ loading: false, success: "", warning: "", error: error.message || "Unable to send message." });
     }
   };
 
@@ -43,6 +51,7 @@ const ContactPage = () => {
           {status.loading ? "Sending..." : "Send message"}
         </button>
         {status.success ? <p className="text-sm text-green-300">{status.success}</p> : null}
+        {status.warning ? <p className="text-sm text-amber-300">{status.warning}</p> : null}
         {status.error ? <p className="text-sm text-red-300">{status.error}</p> : null}
       </form>
     </div>

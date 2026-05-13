@@ -7,6 +7,8 @@ export const PROJECT_CATEGORY_OPTIONS = ["Backend", "Full Stack", "Frontend", "A
 export const adminProjectQuerySchema = querySchema.keys({
   isFeatured: Joi.boolean().optional(),
   isPublished: Joi.boolean().optional(),
+  status: Joi.string().valid(...PROJECT_STATUS_OPTIONS).allow("").optional(),
+  category: Joi.string().valid(...PROJECT_CATEGORY_OPTIONS).allow("").optional(),
 });
 
 export const projectSchema = Joi.object({

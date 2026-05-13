@@ -14,7 +14,8 @@ const achievementSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+achievementSchema.index({ isPublished: 1, isFeatured: 1, displayOrder: 1 });
+
 const Achievement = mongoose.model("Achievement", achievementSchema);
 
 export default Achievement;
-

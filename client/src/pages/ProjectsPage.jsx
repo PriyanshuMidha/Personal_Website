@@ -7,7 +7,10 @@ import useAsyncData from "../hooks/useAsyncData";
 import { publicApi } from "../api/publicApi";
 
 const ProjectsPage = () => {
-  const { data, loading, error } = useAsyncData(() => publicApi.getProjects(), []);
+  const { data, loading, error } = useAsyncData(() => publicApi.getProjects(), [], {
+    cacheKey: "public:projects",
+    staleTime: 5 * 60 * 1000,
+  });
 
   if (loading) return <Loader label="Loading projects..." />;
   if (error) return <ErrorState message={error} />;

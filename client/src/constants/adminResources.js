@@ -9,6 +9,11 @@ export const adminResourceConfigs = {
     singularLabel: "Project",
     endpoint: "/admin/projects",
     publicPath: "/projects",
+    pageSize: 10,
+    listFilters: [
+      { name: "status", label: "Status", options: ["", ...projectStatusOptions] },
+      { name: "category", label: "Category", options: ["", ...projectCategoryOptions] },
+    ],
     fields: [
       { name: "title", label: "Title", type: "text", required: true },
       { name: "slug", label: "Slug", type: "text" },
@@ -31,6 +36,7 @@ export const adminResourceConfigs = {
     singularLabel: "Experience entry",
     endpoint: "/admin/experience",
     publicPath: "/experience",
+    pageSize: 10,
     fields: [
       { name: "company", label: "Company", type: "text", required: true },
       { name: "role", label: "Role", type: "text", required: true },
@@ -51,6 +57,7 @@ export const adminResourceConfigs = {
     singularLabel: "Achievement",
     endpoint: "/admin/achievements",
     publicPath: "/achievements",
+    pageSize: 10,
     fields: [
       { name: "title", label: "Title", type: "text", required: true },
       { name: "category", label: "Category", type: "text" },
@@ -67,6 +74,8 @@ export const adminResourceConfigs = {
     singularLabel: "Skill",
     endpoint: "/admin/skills",
     publicPath: "/skills",
+    pageSize: 20,
+    listFilters: [{ name: "category", label: "Category", options: ["", ...skillCategoryOptions] }],
     fields: [
       { name: "name", label: "Name", type: "text", required: true },
       { name: "category", label: "Category", type: "select", options: skillCategoryOptions, defaultValue: "Backend" },
@@ -81,6 +90,7 @@ export const adminResourceConfigs = {
     singularLabel: "Education entry",
     endpoint: "/admin/education",
     publicPath: "/education",
+    pageSize: 10,
     fields: [
       { name: "degree", label: "Degree", type: "text", required: true },
       { name: "institution", label: "Institution", type: "text", required: true },

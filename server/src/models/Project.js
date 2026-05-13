@@ -35,6 +35,10 @@ const projectSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+projectSchema.index({ isPublished: 1, displayOrder: 1 });
+projectSchema.index({ isPublished: 1, isFeatured: 1, displayOrder: 1 });
+projectSchema.index({ status: 1, category: 1 });
+
 const Project = mongoose.model("Project", projectSchema);
 
 export default Project;

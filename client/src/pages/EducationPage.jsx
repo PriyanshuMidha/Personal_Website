@@ -7,7 +7,10 @@ import useAsyncData from "../hooks/useAsyncData";
 import { publicApi } from "../api/publicApi";
 
 const EducationPage = () => {
-  const { data, loading, error } = useAsyncData(() => publicApi.getEducation(), []);
+  const { data, loading, error } = useAsyncData(() => publicApi.getEducation(), [], {
+    cacheKey: "public:education",
+    staleTime: 5 * 60 * 1000,
+  });
 
   if (loading) return <Loader label="Loading education..." />;
   if (error) return <ErrorState message={error} />;

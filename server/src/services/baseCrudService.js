@@ -3,6 +3,7 @@ import ApiError from "../utils/ApiError.js";
 export const createCrudService = (Model, options = {}) => {
   const defaultSort = options.defaultSort || { displayOrder: 1, createdAt: -1 };
   const searchFields = options.searchFields || [];
+  const buildAdminFilter = options.buildAdminFilter;
   const onCreate = options.onCreate;
   const onUpdate = options.onUpdate;
   const onRemove = options.onRemove;
@@ -21,7 +22,9 @@ export const createCrudService = (Model, options = {}) => {
 
   return {
     async listAdmin(query = {}) {
-      const { page = 1, limit = 20, search } = query;
+      const page = Math.max(1, Number(query.page) || 1);
+      const limit = Math.max(1, Math.min(100, Number(query.limit) || 20));
+      const search = query.search || "";
       const filter = buildSearchFilter(search);
 
       if (query.isFeatured !== undefined) {
@@ -30,6 +33,10 @@ export const createCrudService = (Model, options = {}) => {
 
       if (query.isPublished !== undefined) {
         filter.isPublished = query.isPublished;
+      }
+
+      if (buildAdminFilter) {
+        Object.assign(filter, buildAdminFilter(query));
       }
 
       const [items, total] = await Promise.all([

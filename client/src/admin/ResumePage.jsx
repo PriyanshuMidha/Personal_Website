@@ -6,6 +6,7 @@ import SectionHeader from "../components/SectionHeader";
 import ResumeUploader from "../components/ResumeUploader";
 import ConfirmDialog from "../components/ConfirmDialog";
 import useToast from "../hooks/useToast";
+import { invalidateCache } from "../utils/apiCache";
 
 const formatResumeError = (error) => {
   if (error?.errors?.length) {
@@ -53,12 +54,17 @@ const ResumePage = () => {
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="shell space-y-5 p-6">
           <p className="text-label">Upload controls</p>
-          <ResumeUploader onUploaded={(nextProfile) => setProfile(nextProfile)} />
+          <ResumeUploader
+            onUploaded={(nextProfile) => {
+              setProfile(nextProfile);
+              invalidateCache(["admin:dashboard:overview", "public:profile", "public:home"]);
+            }}
+          />
           <a href="/resume" target="_blank" rel="noopener noreferrer" className="inline-flex w-fit rounded-full border border-border-soft px-4 py-2 text-sm text-text-secondary hover:text-text-primary">
             View public page
           </a>
           <button type="button" onClick={() => setRemoving(true)} disabled={!profile?.resume?.url && !profile?.resumeUrl} className="rounded-full border border-border-soft px-4 py-2 text-sm text-text-secondary disabled:opacity-50">
-            Remove current resume
+            {removing ? "Removing..." : "Remove current resume"}
           </button>
         </div>
 
@@ -92,14 +98,17 @@ const ResumePage = () => {
         onCancel={() => setRemoving(false)}
         onConfirm={async () => {
           try {
+            setRemoving(true);
             const response = await adminApi.updateProfile({ ...profile, resume: null, resumeUrl: "" });
             setProfile(response.data);
+            invalidateCache(["admin:dashboard:overview", "public:profile", "public:home"]);
             setRemoving(false);
             toast.success("Resume removed successfully.");
           } catch (removeError) {
             const message = formatResumeError(removeError);
             setError(message);
             toast.error(message);
+            setRemoving(false);
           }
         }}
       />

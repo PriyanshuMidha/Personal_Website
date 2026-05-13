@@ -9,7 +9,10 @@ import { publicApi } from "../api/publicApi";
 
 const ProjectDetailsPage = () => {
   const { slug } = useParams();
-  const { data, loading, error } = useAsyncData(() => publicApi.getProjectBySlug(slug), [slug]);
+  const { data, loading, error } = useAsyncData(() => publicApi.getProjectBySlug(slug), [slug], {
+    cacheKey: `public:project:${slug}`,
+    staleTime: 5 * 60 * 1000,
+  });
 
   if (loading) return <Loader label="Loading project details..." />;
   if (error) return <ErrorState message={error} />;
