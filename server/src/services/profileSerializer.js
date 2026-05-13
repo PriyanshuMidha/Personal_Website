@@ -3,20 +3,22 @@ export const serializeProfile = (profile) => {
     return null;
   }
 
-  const socialLinks = profile.socialLinks || [];
+  const rawProfile = typeof profile.toObject === "function" ? profile.toObject() : profile;
+
+  const socialLinks = rawProfile.socialLinks || [];
   const findSocialUrl = (platform) =>
     socialLinks.find((item) => String(item.platform || "").toLowerCase() === platform)?.url || "";
 
   return {
-    ...profile.toObject(),
-    name: profile.fullName || "",
-    fullName: profile.fullName || "",
-    shortIntro: profile.shortIntro || profile.subheadline || "",
-    about: profile.about || profile.aboutDescription || profile.bio || "",
-    profileImageUrl: profile.profileImage?.url || profile.profileImageUrl || "",
-    resumeUrl: profile.resume?.url || profile.resumeUrl || "",
-    githubUrl: profile.githubUrl || findSocialUrl("github"),
-    linkedinUrl: profile.linkedinUrl || findSocialUrl("linkedin"),
-    instagramUrl: profile.instagramUrl || findSocialUrl("instagram"),
+    ...rawProfile,
+    name: rawProfile.fullName || "",
+    fullName: rawProfile.fullName || "",
+    shortIntro: rawProfile.shortIntro || rawProfile.subheadline || "",
+    about: rawProfile.about || rawProfile.aboutDescription || rawProfile.bio || "",
+    profileImageUrl: rawProfile.profileImage?.url || rawProfile.profileImageUrl || "",
+    resumeUrl: rawProfile.resume?.url || rawProfile.resumeUrl || "",
+    githubUrl: rawProfile.githubUrl || findSocialUrl("github"),
+    linkedinUrl: rawProfile.linkedinUrl || findSocialUrl("linkedin"),
+    instagramUrl: rawProfile.instagramUrl || findSocialUrl("instagram"),
   };
 };

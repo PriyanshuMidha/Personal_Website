@@ -36,6 +36,7 @@ export const achievementService = {
     return Achievement.find({ isPublished: true })
       .sort({ displayOrder: 1, createdAt: -1 })
       .limit(limit)
-      .select("title category description impact date isFeatured displayOrder");
+      .select("title category description impact date isFeatured displayOrder")
+      .lean();
   },
 };

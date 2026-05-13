@@ -34,4 +34,5 @@ skillService.listPreview = async (limit = 4) =>
   Skill.find({ isPublished: true })
     .sort({ displayOrder: 1, createdAt: -1 })
     .limit(limit)
-    .select("name category level icon displayOrder");
+    .select("name category level icon displayOrder")
+    .lean();

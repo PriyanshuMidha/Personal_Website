@@ -70,7 +70,7 @@ export const projectService = {
   },
 
   async getPublicBySlug(slug) {
-    const project = await Project.findOne({ slug, isPublished: true });
+    const project = await Project.findOne({ slug, isPublished: true }).lean();
     if (!project) {
       throw new ApiError(404, "Project not found");
     }
@@ -78,14 +78,14 @@ export const projectService = {
   },
 
   async getFeaturedProjects() {
-    return Project.find({ isPublished: true, isFeatured: true }).sort({ displayOrder: 1, createdAt: -1 }).select(publicProjectCardSelect);
+    return Project.find({ isPublished: true, isFeatured: true }).sort({ displayOrder: 1, createdAt: -1 }).select(publicProjectCardSelect).lean();
   },
 
   async listPublicSummary() {
-    return Project.find({ isPublished: true }).sort({ displayOrder: 1, createdAt: -1 }).select(publicProjectCardSelect);
+    return Project.find({ isPublished: true }).sort({ displayOrder: 1, createdAt: -1 }).select(publicProjectCardSelect).lean();
   },
 
   async listFeaturedSummary(limit = 4) {
-    return Project.find({ isPublished: true, isFeatured: true }).sort({ displayOrder: 1, createdAt: -1 }).limit(limit).select(publicProjectCardSelect);
+    return Project.find({ isPublished: true, isFeatured: true }).sort({ displayOrder: 1, createdAt: -1 }).limit(limit).select(publicProjectCardSelect).lean();
   },
 };

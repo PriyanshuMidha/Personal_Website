@@ -101,6 +101,7 @@
 - Admin and public overview pages now render LeetCode-inspired progress widgets driven by MongoDB APIs instead of static assumptions.
 - The admin profile page now exposes direct CMS fields for editable intro/about/social/current-role content, so public profile pages can be updated without code changes.
 - Public route data now uses a small shared cache/in-flight dedupe layer, with the home page pulling from `/api/public/home` and other public pages caching API responses for roughly five minutes to avoid duplicate page-load calls.
+- Hot read paths now favor lean Mongo queries for public profile/home data and admin auth hydration, and the frontend auth hook dedupes `GET /api/admin/auth/me` hydration in development so `React.StrictMode` does not create an extra identical session-restore request.
 - The admin dashboard now loads from `/api/admin/dashboard/overview` in one request and shows skeleton cards while the combined payload is loading.
 - Admin resource tables and the message inbox now load paginated slices, expose lightweight search/filter controls, and use local row updates after create/update/delete/status changes instead of refetching unrelated CMS modules.
 - Admin save flows now surface toast-style success/error notifications for profile updates, CRUD content saves/deletes, message status changes, and asset uploads; successful writes invalidate only the affected public/admin cache keys so later views refresh without a full app-wide reload.
