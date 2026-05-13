@@ -333,7 +333,16 @@ const ResourceManagerPage = ({ config }) => {
             }
 
             if (field.type === "array") {
-              return <FormArrayInput key={field.name} label={field.label} value={form[field.name] || []} onChange={(value) => setField(field.name, value)} />;
+              return (
+                <FormArrayInput
+                  key={field.name}
+                  label={field.label}
+                  value={form[field.name] || []}
+                  placeholder={field.placeholder}
+                  helperText={field.helperText}
+                  onChange={(value) => setField(field.name, value)}
+                />
+              );
             }
 
             if (field.type === "checkbox") {
