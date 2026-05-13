@@ -6,12 +6,21 @@ const parseArrayValue = (input) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
+const serializeArrayValue = (items) => (Array.isArray(items) ? items.join(", ") : "");
+
 const FormArrayInput = ({ label, value = [], onChange, placeholder = "Add comma-separated or line-separated values", helperText = "" }) => {
-  const [draftValue, setDraftValue] = useState(Array.isArray(value) ? value.join(", ") : "");
+  const [draftValue, setDraftValue] = useState(serializeArrayValue(value));
 
   useEffect(() => {
-    setDraftValue(Array.isArray(value) ? value.join(", ") : "");
-  }, [value]);
+    const nextSerialized = serializeArrayValue(value);
+    const normalizedDraft = serializeArrayValue(parseArrayValue(draftValue));
+
+    // Avoid wiping trailing commas/spaces/new lines while the user is typing.
+    // Only sync from props when the incoming value is meaningfully different.
+    if (nextSerialized !== normalizedDraft) {
+      setDraftValue(nextSerialized);
+    }
+  }, [draftValue, value]);
 
   return (
     <label className="flex flex-col gap-2">
