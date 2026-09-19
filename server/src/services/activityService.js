@@ -5,19 +5,25 @@ const PROFILE_UPDATE_DEDUP_WINDOW_MS = 10 * 60 * 1000;
 
 export const skillTopicOrderList = ["Backend", "Frontend", "Database", "Messaging", "DevOps", "Languages", "Tools", "Soft Skills"];
 
+const SKILL_TOPIC_PATTERNS = [
+  { topic: "Backend", pattern: /backend|\bapi\b|\bserver\b|\bnode\b|express/ },
+  { topic: "Database", pattern: /database|\bdb\b|mongo|postgres|mysql|redis|\bsql\b/ },
+  { topic: "Messaging", pattern: /messag|queue|kafka|rabbitmq|pub ?\/? ?sub/ },
+  { topic: "DevOps", pattern: /devops|infra|\bcloud\b|\baws\b|docker|kubernetes|ci\/cd|\bci\b/ },
+  { topic: "Frontend", pattern: /frontend|\bui\b|react|vue|\bweb\b/ },
+  { topic: "Languages", pattern: /language|javascript|typescript|python|\bjava\b|\bgo\b|c\+\+|c#|\.net/ },
+  { topic: "Soft Skills", pattern: /soft skill|communication|leadership|collaboration|adaptability|teamwork/ },
+  // Tools is checked last since it's also the catch-all fallback below.
+  { topic: "Tools", pattern: /tool|testing|observability|\bgit\b|swagger|vs ?code|generative ai/ },
+];
+
 export const normalizeSkillCategory = (value = "") => {
   const normalized = String(value).trim().toLowerCase();
 
-  if (["backend", "api", "server", "node", "express"].includes(normalized)) return "Backend";
-  if (["database", "db", "mongodb", "postgresql", "mysql", "redis"].includes(normalized)) return "Database";
-  if (["messaging", "queue", "queues", "kafka", "rabbitmq", "pubsub", "pub/sub"].includes(normalized)) return "Messaging";
-  if (["devops", "infra", "infrastructure", "cloud", "aws", "docker", "kubernetes", "ci/cd", "ci"].includes(normalized)) return "DevOps";
-  if (["frontend", "ui", "react", "web"].includes(normalized)) return "Frontend";
-  if (["language", "languages", "javascript", "typescript", "python", "java", "go", "c++"].includes(normalized)) return "Languages";
-  if (["tools", "tooling", "testing", "observability"].includes(normalized)) return "Tools";
-  if (["soft skill", "soft skills", "communication", "leadership", "collaboration"].includes(normalized)) return "Soft Skills";
+  if (!normalized) return "Tools";
 
-  return value || "Tools";
+  const match = SKILL_TOPIC_PATTERNS.find(({ pattern }) => pattern.test(normalized));
+  return match ? match.topic : "Tools";
 };
 
 export const createActivityLog = async ({ actionType, module, title, description }) => {
