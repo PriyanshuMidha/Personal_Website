@@ -81,7 +81,7 @@ const HomePage = () => {
         }
       />
 
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid items-start gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <DashboardCard
           title={profile?.headline || "Building backend systems with control-room clarity."}
           eyebrow="Journey Overview"
@@ -119,7 +119,7 @@ const HomePage = () => {
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr_1fr]">
+      <div className="grid items-start gap-4 xl:grid-cols-[0.85fr_1.15fr_1fr]">
         <DashboardCard title="Portfolio Completion" eyebrow="Progress Ring" description="A quick read on how complete the portfolio setup is right now.">
           <ProgressRing
             value={statsPayload.completion?.percentage || 0}
@@ -134,7 +134,7 @@ const HomePage = () => {
         </DashboardCard>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid items-start gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <DashboardCard title="Featured Projects" eyebrow="Spotlight" description="Selected builds that show architecture decisions, execution depth, and practical backend thinking.">
           {featuredProjects.length ? (
             <div className="grid gap-4 md:grid-cols-2">
@@ -165,7 +165,7 @@ const HomePage = () => {
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid items-start gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <DashboardCard title="Backend Journey" eyebrow="Experience" description="Recent roles and systems work arranged as a dense operational timeline.">
           <ExperienceTimeline items={experiencePreview} />
         </DashboardCard>

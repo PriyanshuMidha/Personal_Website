@@ -51,7 +51,7 @@ const ResumePage = () => {
         description="Manage the current resume file used by the public portfolio and replace it whenever your experience changes."
       />
 
-      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+      <div className="grid items-start gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="shell space-y-5 p-6">
           <p className="text-label">Upload controls</p>
           <ResumeUploader

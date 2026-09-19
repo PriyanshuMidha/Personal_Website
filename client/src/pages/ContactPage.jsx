@@ -31,7 +31,7 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+    <div className="grid items-start gap-6 xl:grid-cols-[0.85fr_1.15fr]">
       <div className="space-y-6">
         <SectionHeader title="Contact" description="Use the dashboard-style contact panel to start a conversation about backend systems, products, or engineering work." eyebrow="Reach Out" />
         <div className="shell space-y-4 p-6">

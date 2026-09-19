@@ -232,7 +232,7 @@ const ResourceManagerPage = ({ config }) => {
         description={`Create, publish, and reorder ${config.title.toLowerCase()} from the control room without changing the underlying API contracts.`}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+      <div className="grid items-start gap-6 xl:grid-cols-[1.12fr_0.88fr]">
         <section className="space-y-4">
           <div className="card-surface flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="w-full lg:max-w-sm">

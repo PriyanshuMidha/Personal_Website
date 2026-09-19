@@ -7,7 +7,7 @@ export const uploadImageAsset = async (file) => uploadToCloudinary(file, "portfo
 export const uploadResumeAsset = async (file) => {
   const asset = await uploadToCloudinary(file, "portfolio/resume", "raw");
   const profile = await getProfile();
-  const updatedProfile = await updateProfile({ ...profile.toObject(), resume: asset, resumeUrl: asset.url }, { skipActivityLog: true });
+  const updatedProfile = await updateProfile({ ...profile, resume: asset, resumeUrl: asset.url }, { skipActivityLog: true });
   await createActivityLog({
     actionType: "upload",
     module: "resume",

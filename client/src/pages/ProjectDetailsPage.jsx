@@ -20,7 +20,7 @@ const ProjectDetailsPage = () => {
   return (
     <div className="space-y-8">
       <SectionHeader eyebrow={data?.category || "Project"} title={data?.title} description={data?.shortDescription} actions={<StatusBadge status={data?.status || "completed"} />} />
-      <div className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+      <div className="grid items-start gap-6 xl:grid-cols-[1.12fr_0.88fr]">
         <div className="space-y-6">
           <div className="shell p-6">
             <h3 className="font-display text-2xl text-text-primary">Overview</h3>

@@ -51,7 +51,7 @@ const DashboardPage = () => {
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr_1fr]">
+      <div className="grid items-start gap-4 xl:grid-cols-[0.8fr_1.2fr_1fr]">
         <DashboardCard title="Portfolio Completion" eyebrow="Progress Ring" description="Tracks how complete the portfolio CMS is right now.">
           <ProgressRing
             value={widgets.portfolioCompletion?.percentage || 0}
@@ -66,7 +66,7 @@ const DashboardPage = () => {
         </DashboardCard>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid items-start gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <DashboardCard
           title="Workspace Activity"
           eyebrow="Overview Surface"
@@ -120,7 +120,7 @@ const DashboardPage = () => {
         </DashboardCard>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid items-start gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <DashboardCard title="Recent Messages" eyebrow="Inbox" description="The latest contact activity entering the CMS.">
           <AdminDataTable
             dense
@@ -150,7 +150,7 @@ const DashboardPage = () => {
         </DashboardCard>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+      <div className="grid items-start gap-4 xl:grid-cols-[1fr_1fr]">
         <DashboardCard title="Activity Heatmap" eyebrow="CMS Updates" description="Recent admin changes rendered as a daily activity grid.">
           <HeatmapGrid cells={widgets.heatmap || []} />
         </DashboardCard>
@@ -175,7 +175,7 @@ const DashboardPage = () => {
         </DashboardCard>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_0.95fr]">
+      <div className="grid items-start gap-4 xl:grid-cols-[1fr_0.95fr]">
         <DashboardCard title="Quick Actions" eyebrow="Fast Paths" description="Jump back into the most common content operations.">
           <div className="grid gap-4">
             {[
@@ -215,7 +215,7 @@ const DashboardPage = () => {
           </div>
         </DashboardCard>
       </div>
-      <div className="grid gap-4 xl:grid-cols-[1fr_0.95fr]">
+      <div className="grid items-start gap-4 xl:grid-cols-[1fr_0.95fr]">
         <DashboardCard title="System Context" eyebrow="Workspace" description="Useful runtime and delivery context for the current admin session.">
           <div className="grid gap-4 md:grid-cols-3">
             <MetricCard label="Auth Mode" value="JWT" helper="Protected admin workspace" accent="primary" progress={65} />

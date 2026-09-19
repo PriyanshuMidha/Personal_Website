@@ -17,7 +17,7 @@ const AboutPage = () => {
   return (
     <div className="space-y-8">
       <SectionHeader title={data?.aboutTitle || "About me"} description={data?.subheadline || "Engineering with systems depth, clean implementation, and a product-aware lens."} eyebrow="Profile" />
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid items-start gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="shell p-6">
           <p className="text-sm leading-8 text-text-secondary">{data?.about || data?.aboutDescription || data?.bio || "Add your story from the admin CMS."}</p>
         </div>

@@ -20,6 +20,9 @@ const activityLogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+activityLogSchema.index({ updatedAt: -1, createdAt: -1 });
+activityLogSchema.index({ createdAt: -1 });
+
 const ActivityLog = mongoose.model("ActivityLog", activityLogSchema);
 
 export default ActivityLog;

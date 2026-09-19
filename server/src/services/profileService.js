@@ -4,10 +4,10 @@ import { serializeProfile } from "./profileSerializer.js";
 
 export const getProfile = async ({ publishedOnly = false } = {}) => {
   const filter = publishedOnly ? { isPublished: true } : {};
-  let profile = publishedOnly ? await Profile.findOne(filter).lean() : await Profile.findOne(filter);
+  let profile = await Profile.findOne(filter).lean();
 
   if (!profile && !publishedOnly) {
-    profile = await Profile.create({});
+    profile = (await Profile.create({})).toObject();
   }
 
   return profile;

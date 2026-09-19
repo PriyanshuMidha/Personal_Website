@@ -1,6 +1,7 @@
 import express from "express";
 import path from "node:path";
 import cors from "cors";
+import compression from "compression";
 import helmet from "helmet";
 import morgan from "morgan";
 import { apiLimiter, authLimiter, contactLimiter } from "./middlewares/rateLimiter.js";
@@ -41,6 +42,7 @@ app.use(
 );
 app.options("*", cors(corsOptions));
 app.use(helmet());
+app.use(compression());
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(":method :url :status :response-time ms"));

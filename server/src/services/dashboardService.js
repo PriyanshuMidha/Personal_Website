@@ -13,14 +13,25 @@ import { buildHeatmapData, listActivity, normalizeSkillCategory, skillTopicOrder
 
 const buildProjectStatusStats = async (publishedOnly = false) => {
   const filter = publishedOnly ? { isPublished: true } : {};
-  const [live, inProgress, archived, featured] = await Promise.all([
-    Project.countDocuments({ ...filter, status: { $regex: /^live$/i } }),
-    Project.countDocuments({ ...filter, status: { $regex: /in[- ]?progress/i } }),
-    Project.countDocuments({ ...filter, status: { $regex: /^archived$/i } }),
-    Project.countDocuments({ ...filter, isFeatured: true }),
+
+  const [result] = await Project.aggregate([
+    { $match: filter },
+    {
+      $facet: {
+        live: [{ $match: { status: { $regex: /^live$/i } } }, { $count: "count" }],
+        inProgress: [{ $match: { status: { $regex: /in[- ]?progress/i } } }, { $count: "count" }],
+        archived: [{ $match: { status: { $regex: /^archived$/i } } }, { $count: "count" }],
+        featured: [{ $match: { isFeatured: true } }, { $count: "count" }],
+      },
+    },
   ]);
 
-  return { live, inProgress, archived, featured };
+  return {
+    live: result.live[0]?.count || 0,
+    inProgress: result.inProgress[0]?.count || 0,
+    archived: result.archived[0]?.count || 0,
+    featured: result.featured[0]?.count || 0,
+  };
 };
 
 const buildSkillTopicProgress = async (publishedOnly = false) => {
@@ -44,14 +55,35 @@ const buildSkillTopicProgress = async (publishedOnly = false) => {
   });
 };
 
-const buildPortfolioCompletion = async () => {
-  const [profile, projects, skills, experience, achievements] = await Promise.all([
-    getProfile(),
-    Project.countDocuments(),
-    Skill.countDocuments(),
-    Experience.countDocuments(),
-    Achievement.countDocuments(),
+const countAcrossCollections = async (baseModel, entries, filter = {}) => {
+  const [baseKey, ...restEntries] = entries;
+  const results = await baseModel.aggregate([
+    { $match: filter },
+    { $count: "count" },
+    { $addFields: { key: baseKey.key } },
+    ...restEntries.map(({ coll, key }) => ({
+      $unionWith: { coll, pipeline: [{ $match: filter }, { $count: "count" }, { $addFields: { key } }] },
+    })),
   ]);
+
+  const counts = Object.fromEntries(entries.map(({ key }) => [key, 0]));
+  results.forEach((row) => {
+    counts[row.key] = row.count;
+  });
+  return counts;
+};
+
+const buildPortfolioCompletion = async () => {
+  const [profile, counts] = await Promise.all([
+    getProfile(),
+    countAcrossCollections(Project, [
+      { key: "projects" },
+      { coll: "skills", key: "skills" },
+      { coll: "experiences", key: "experience" },
+      { coll: "achievements", key: "achievements" },
+    ]),
+  ]);
+  const { projects, skills, experience, achievements } = counts;
 
   const checks = [
     { label: "Profile completed", complete: Boolean(profile?.fullName && profile?.headline && profile?.email) },
@@ -74,32 +106,32 @@ const buildPortfolioCompletion = async () => {
 
 const buildImpactStats = async (publishedOnly = false) => {
   const filter = publishedOnly ? { isPublished: true } : {};
-  const [projectsBuilt, skillsAdded, achievementsAdded, experienceEntries] = await Promise.all([
-    Project.countDocuments(filter),
-    Skill.countDocuments(filter),
-    Achievement.countDocuments(filter),
-    Experience.countDocuments(filter),
-  ]);
+  const counts = await countAcrossCollections(
+    Project,
+    [
+      { key: "projectsBuilt" },
+      { coll: "skills", key: "skillsAdded" },
+      { coll: "achievements", key: "achievementsAdded" },
+      { coll: "experiences", key: "experienceEntries" },
+    ],
+    filter
+  );
 
-  return {
-    projectsBuilt,
-    skillsAdded,
-    achievementsAdded,
-    experienceEntries,
-  };
+  return counts;
 };
 
 export const getDashboardStats = async ({ publishedOnly = false } = {}) => {
-  const [completion, topicProgress, projectStatus, impactStats, heatmap, recentActivity] = await Promise.all([
+  const [completion, topicProgress, projectStatus, impactStats, heatmap, recentActivity, profile] = await Promise.all([
     buildPortfolioCompletion(),
     buildSkillTopicProgress(publishedOnly),
     buildProjectStatusStats(publishedOnly),
     buildImpactStats(publishedOnly),
-    buildHeatmapData(),
-    listActivity({ limit: publishedOnly ? 10 : 20 }),
+    // Public visitors never see the activity heatmap/log (HomePage doesn't render them),
+    // so skip these two DB round trips (an aggregation + a query) on that path.
+    publishedOnly ? Promise.resolve([]) : buildHeatmapData(),
+    publishedOnly ? Promise.resolve([]) : listActivity({ limit: 20 }),
+    getProfile({ publishedOnly }),
   ]);
-
-  const profile = await getProfile({ publishedOnly });
 
   return {
     completion,
