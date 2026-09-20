@@ -134,7 +134,7 @@ const HomePage = () => {
         </DashboardCard>
       </div>
 
-      <div className="grid items-start gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-4">
         <DashboardCard title="Featured Projects" eyebrow="Spotlight" description="Selected builds that show architecture decisions, execution depth, and practical backend thinking.">
           {featuredProjects.length ? (
             <div className={`grid gap-4 ${featuredProjects.length > 1 ? "md:grid-cols-2" : ""}`}>
@@ -146,31 +146,34 @@ const HomePage = () => {
             <EmptyState title="No featured projects yet. Add featured projects from CMS." />
           )}
         </DashboardCard>
-
-        <div className="grid gap-4">
-          <DashboardCard title="Skills" eyebrow="Capability Surface" description="Backend stack, tooling, and operating comfort zones.">
-            <div className="grid gap-4">
-              {skillsPreview.map((skill) => (
-                <SkillCard key={skill._id} skill={skill} />
-              ))}
-            </div>
-          </DashboardCard>
-          <DashboardCard title="Achievements" eyebrow="Impact Snapshot" description="A compact view of outcomes and delivery wins.">
-            <div className="space-y-4">
-              {achievementsPreview.map((achievement) => (
-                <AchievementCard key={achievement._id} achievement={achievement} />
-              ))}
-            </div>
-          </DashboardCard>
-        </div>
       </div>
 
-      <div className="grid items-start gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid items-start gap-4 xl:grid-cols-2">
+        <DashboardCard title="Skills" eyebrow="Capability Surface" description="Backend stack, tooling, and operating comfort zones.">
+          <div className="grid gap-4">
+            {skillsPreview.map((skill) => (
+              <SkillCard key={skill._id} skill={skill} />
+            ))}
+          </div>
+        </DashboardCard>
+        <DashboardCard title="Achievements" eyebrow="Impact Snapshot" description="A compact view of outcomes and delivery wins.">
+          <div className="space-y-4">
+            {achievementsPreview.map((achievement) => (
+              <AchievementCard key={achievement._id} achievement={achievement} />
+            ))}
+          </div>
+        </DashboardCard>
+      </div>
+
+      <div className="grid gap-4">
         <DashboardCard title="Backend Journey" eyebrow="Experience" description="Recent roles and systems work arranged as a dense operational timeline.">
           <ExperienceTimeline items={experiencePreview} />
         </DashboardCard>
+      </div>
+
+      <div className="grid gap-4">
         <DashboardCard title="Resume Status" eyebrow="Document" description="Keep the public resume ready and accessible without cluttering the overview.">
-          <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
             <div className="card-surface p-5">
               <p className="text-sm font-medium text-text-primary">{statsPayload.profileStatus?.hasResume ? "Resume ready" : "Resume not uploaded yet"}</p>
               <p className="mt-2 text-sm leading-7 text-text-secondary">
@@ -183,7 +186,7 @@ const HomePage = () => {
               href={profile?.resumeUrl || "/resume"}
               target={profile?.resumeUrl ? "_blank" : undefined}
               rel={profile?.resumeUrl ? "noopener noreferrer" : undefined}
-              className="inline-flex rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-text-primary"
+              className="inline-flex shrink-0 items-center justify-center rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-text-primary"
             >
               {profile?.resumeUrl ? "Open current resume" : "Go to resume page"}
             </a>

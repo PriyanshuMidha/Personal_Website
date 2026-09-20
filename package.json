@@ -10,4 +10,3 @@
     "seed:admin": "npm --prefix server run seed:admin"
   }
 }
-
