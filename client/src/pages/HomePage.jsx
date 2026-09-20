@@ -137,7 +137,7 @@ const HomePage = () => {
       <div className="grid items-start gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <DashboardCard title="Featured Projects" eyebrow="Spotlight" description="Selected builds that show architecture decisions, execution depth, and practical backend thinking.">
           {featuredProjects.length ? (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className={`grid gap-4 ${featuredProjects.length > 1 ? "md:grid-cols-2" : ""}`}>
               {featuredProjects.map((project) => (
                 <ProjectCard key={project._id} project={project} />
               ))}
