@@ -79,6 +79,7 @@
 - `ActivityLog` now keeps `updatedAt` so deduplicated profile-update events can refresh their admin-visible timestamp without multiplying public/admin activity noise.
 - Published public content is filtered with `isPublished` and sorted with `displayOrder`.
 - `Project` uses unique slugs, exact CMS-enforced category/status enums, and supports Cloudinary-backed or local-fallback `screenshots`.
+- Seeded portfolio projects now include the live Ranchi Mathematical Olympiad CMS project with its Render frontend and GitHub links.
 - `ContactMessage` supports statuses `new`, `read`, `replied`, and `archived`.
 - Public contact submissions are always stored in `ContactMessage`, and the server now also attempts an email notification via a provider-backed server call when `CONTACT_NOTIFICATION_*` / `RESEND_API_KEY` environment variables are configured.
 - `POST /api/public/contact` now returns an accurate delivery status message: successful email delivery stays green on the frontend, while skipped/misconfigured or provider-failed notifications are surfaced as a saved-but-not-emailed warning instead of a false success state.

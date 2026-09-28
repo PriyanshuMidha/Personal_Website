@@ -125,6 +125,30 @@ const EDUCATION_DATA = [
 
 const PROJECT_DATA = [
   {
+    title: "Ranchi Mathematical Olympiad CMS",
+    slug: "ranchi-mathematical-olympiad-cms",
+    shortDescription:
+      "A CMS-powered Mathematical Olympiad portal for Ranchi, Jharkhand, built to publish news, results, resources, notices, and student alerts in one place.",
+    longDescription:
+      "Full-stack CMS website for a Ranchi, Jharkhand Mathematical Olympiad branch. The platform includes a public student-facing portal for latest news, result updates, resources, notices, PDF links, saved items, and email notification signups, plus an admin workspace for managing Olympiad content, uploads, levels, categories, and published pages.",
+    problemSolved:
+      "Gives students, parents, and administrators one organized place for Mathematical Olympiad announcements, resources, result updates, and notification-driven communication.",
+    techStack: ["React", "Node.js", "Express", "MongoDB", "Render", "Cloudflare R2"],
+    features: [
+      "Public news, results, resources, and detail pages",
+      "Admin CMS for creating and publishing Olympiad updates",
+      "Email notification signup and background delivery workflow",
+      "MongoDB-backed content, saved items, and upload-ready notice attachments",
+    ],
+    githubUrl: "https://github.com/PriyanshuMidha/mathematical-olampiyard",
+    liveUrl: "https://mathematical-olampiyard-1.onrender.com/",
+    category: "Full Stack",
+    status: "Live",
+    isFeatured: true,
+    isPublished: true,
+    displayOrder: 0,
+  },
+  {
     title: "Repair Management System",
     slug: "repair-management-system",
     shortDescription:
@@ -145,7 +169,7 @@ const PROJECT_DATA = [
     status: "Live",
     isFeatured: true,
     isPublished: true,
-    displayOrder: 0,
+    displayOrder: 1,
   },
   {
     title: "Focus Desk",
@@ -163,7 +187,7 @@ const PROJECT_DATA = [
     status: "Live",
     isFeatured: false,
     isPublished: true,
-    displayOrder: 1,
+    displayOrder: 2,
   },
 ];
 
